@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import * as api from '../../lib/api';
 import { formatRub } from '../../lib/prices';
 import type { Profile } from '../../types/database';
+import TruckOnRoad from '../../components/TruckOnRoad/TruckOnRoad';
 import styles from './ProfilePage.module.css';
 
 interface OrderRow {
@@ -27,11 +28,11 @@ function orderStatusLabel(o: OrderRow): string {
   return 'Ожидает оплаты';
 }
 
-// Часы: перезапуск gif раз в 6 сек, чтобы анимация казалась гораздо медленнее
+// Часы: перезапуск gif раз в 15 сек, чтобы анимация казалась медленнее
 function SlowClock({ className }: { className?: string }) {
   const [key, setKey] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setKey((k) => k + 1), 6000);
+    const t = setInterval(() => setKey((k) => k + 1), 15000);
     return () => clearInterval(t);
   }, []);
   return (
@@ -174,7 +175,7 @@ export default function ProfilePage() {
                         </div>
                       ) : o.status === 'shipped' ? (
                         <div className={styles.orderStatusImg}>
-                          <img src="/gruz.png" alt="" className={styles.orderTruck} />
+                          <TruckOnRoad className={styles.orderTruckWrap} />
                         </div>
                       ) : (
                         <div className={styles.orderStatusImg}>

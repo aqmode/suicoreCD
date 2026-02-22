@@ -293,6 +293,16 @@
   line-height: 1.4;
 }
 
+.agreeText .agreeLink {
+  color: inherit;
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.agreeText .agreeLink:hover {
+  opacity: 0.85;
+}
+
 .pvzInfo {
   margin-top: 16px;
   padding: 16px;

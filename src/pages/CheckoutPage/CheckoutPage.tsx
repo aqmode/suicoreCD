@@ -220,12 +220,19 @@ export default function CheckoutPage() {
               aria-describedby="agree-hint"
             />
             <span id="agree-hint" className={styles.agreeText}>
-              Я согласен на обработку моих персональных данных.
+              Я соглашаюсь с{' '}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className={styles.agreeLink}>
+                политикой обработки персональных данных
+              </a>{' '}
+              и{' '}
+              <a href="/offer" target="_blank" rel="noopener noreferrer" className={styles.agreeLink}>
+                офертой
+              </a>.
             </span>
           </label>
           {submitAttempted && !agreePersonalData && (
             <p className={styles.fieldError} role="alert">
-              Для оформления заказа необходимо согласие на обработку персональных данных.
+              Необходимо согласие с политикой и офертой.
             </p>
           )}
           {submitAttempted && !canSubmit && (
