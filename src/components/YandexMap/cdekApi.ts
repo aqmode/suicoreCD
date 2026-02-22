@@ -12,7 +12,7 @@ export async function fetchPvzFromCdekApi(
   password: string
 ): Promise<CdekPvzItem[]> {
   const mod = await import("cdek");
-  const CdekClass = mod.Cdek ?? (mod as { default?: typeof mod.Cdek }).default;
+  const CdekClass = mod.Cdek ?? (mod as unknown as { default?: typeof mod.Cdek }).default;
   if (!CdekClass) throw new Error("Cdek not found");
   const client = new CdekClass({
     account,

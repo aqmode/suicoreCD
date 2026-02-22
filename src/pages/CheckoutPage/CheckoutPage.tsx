@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-number-input";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import ru from "react-phone-number-input/locale/ru.json";
@@ -15,7 +14,6 @@ import styles from "./CheckoutPage.module.css";
 
 export default function CheckoutPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { items, totalRub } = useCart();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");

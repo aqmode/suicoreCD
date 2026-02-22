@@ -1,5 +1,6 @@
 import { ProxyAgent, fetch as proxyFetch } from 'undici';
-import type { Connect } from 'vite';
+import type { ServerResponse } from 'node:http';
+import type { IncomingMessage } from 'node:http';
 
 interface TokenData {
   token: string;
@@ -110,7 +111,7 @@ function proxyEnvToUrl(proxy: string): string {
   return '';
 }
 
-export function createSpotifyMiddleware(env: Record<string, string>): Connect.NextHandleFunction {
+export function createSpotifyMiddleware(env: Record<string, string>): (req: IncomingMessage, res: ServerResponse, next: () => void) => void {
   const clientId = env.SPOTIFY_CLIENT_ID || '';
   const clientSecret = env.SPOTIFY_CLIENT_SECRET || '';
   // PROXY=host:port:user:pass имеет приоритет; иначе SPOTIFY_PROXY (полный URL)
@@ -122,7 +123,7 @@ export function createSpotifyMiddleware(env: Record<string, string>): Connect.Ne
   }
   const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
 
-  return async (req, res, next) => {
+  return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const url = req.url || '';
 
     if (url === '/init') {
@@ -142,7 +143,7 @@ async function handleInit(
   clientId: string,
   clientSecret: string,
   dispatcher: ProxyAgent | undefined,
-  res: Connect.ServerResponse
+  res: ServerResponse
 ) {
   try {
     if (artistCache) {
@@ -217,7 +218,7 @@ async function handleAlbumTracks(
   clientId: string,
   clientSecret: string,
   dispatcher: ProxyAgent | undefined,
-  res: Connect.ServerResponse
+  res: ServerResponse
 ) {
   try {
     if (trackCaches.has(albumId)) {

@@ -123,9 +123,10 @@ export default function AdminPage() {
       setError(null);
       const { data: ok, error: err } = await api.apiAdminDeleteOrder(String(orderId), pwd);
       if (err) {
-        let msg = err.message || "Ошибка при удалении";
-        if (err.details) msg += ` — ${err.details}`;
-        if (err.hint) msg += ` (${err.hint})`;
+        const e = err as { message?: string; details?: string; hint?: string };
+        let msg = e.message || "Ошибка при удалении";
+        if (e.details) msg += ` — ${e.details}`;
+        if (e.hint) msg += ` (${e.hint})`;
         setError(msg);
         console.error("[Admin] delete_order_admin error:", err);
         return;

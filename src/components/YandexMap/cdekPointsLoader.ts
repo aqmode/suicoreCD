@@ -38,7 +38,7 @@ export async function loadCdekPointsForMap(): Promise<{
 } | null> {
   try {
     const mod = await import("./points.json");
-    const raw = mod.default as CdekJsonFeatureCollection;
+    const raw = mod.default as unknown as CdekJsonFeatureCollection;
     if (!raw?.features?.length) return null;
 
     const byId = new Map<number, CdekJsonFeature>();

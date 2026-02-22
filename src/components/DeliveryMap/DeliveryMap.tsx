@@ -21,7 +21,6 @@ interface NominatimResult {
 }
 // Схематичная белая карта — CARTO Positron (улицы, города, минимум деталей).
 const CARTO_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png";
-const OSM_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const TILE_URL = CARTO_URL;
 const TILE_OPTIONS: L.TileLayerOptions = {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -73,7 +72,7 @@ export default function DeliveryMap({ onSelect }: Props) {
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const searchMarkerRef = useRef<L.Marker | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<NominatimResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);

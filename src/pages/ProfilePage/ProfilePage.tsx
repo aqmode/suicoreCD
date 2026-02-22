@@ -68,7 +68,7 @@ export default function ProfilePage() {
     const load = async () => {
       const { data } = await api.apiGetProfile();
       if (data) {
-        setProfile(data as Profile);
+        setProfile(data as unknown as Profile);
         setFullName((data.full_name as string) ?? '');
         setPhone((data.phone as string) ?? '');
       }
@@ -81,7 +81,7 @@ export default function ProfilePage() {
     if (!user || tab !== 'orders') return;
     setOrdersLoading(true);
     api.apiGetOrders().then(({ data }) => {
-      setOrders((data ?? []) as OrderRow[]);
+      setOrders((data ?? []) as unknown as OrderRow[]);
       setOrdersLoading(false);
     });
   }, [user, tab]);

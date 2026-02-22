@@ -46,7 +46,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     const { data, error } = await api.apiGetCart();
-    if (!error) setItems((data || []) as CartItem[]);
+    if (!error) setItems((data || []) as unknown as CartItem[]);
     setLoading(false);
   }, [user?.id]);
 

@@ -15,16 +15,6 @@ interface CdekApiPoint {
   brandName?: string;
 }
 
-/** Ответ API с массивом ПВЗ */
-interface CdekApiResponse {
-  success?: boolean;
-  data?: {
-    amount?: number;
-    count?: number;
-    data?: CdekApiPoint[];
-  };
-}
-
 /** Старый формат GeoJSON (для обратной совместимости) */
 interface CdekJsonFeature {
   type: "Feature";
@@ -37,8 +27,10 @@ interface CdekJsonFeature {
   };
 }
 
-interface CdekJsonFeatureCollection {
-  type: "FeatureCollection";
+/** Формат points.json: либо API (success + data.data), либо GeoJSON (features) */
+interface PointsJson {
+  success?: boolean;
+  data?: { data?: CdekApiPoint[] };
   features?: CdekJsonFeature[];
 }
 
@@ -71,14 +63,14 @@ async function loadCitiesMap(): Promise<Record<number, string>> {
 export async function loadCdekPointsForLeaflet(): Promise<LeafletPoint[] | null> {
   try {
     const mod = await import("../YandexMap/points.json");
-    const raw = mod.default as CdekApiResponse & CdekJsonFeatureCollection;
+    const raw = mod.default as unknown as PointsJson;
 
     const cities = await loadCitiesMap();
 
     // Новый формат API: { success, data: { data: [...] } }
     if (raw?.success && Array.isArray(raw.data?.data)) {
       const items = raw.data.data;
-      return items.map((p) => {
+      return items.map((p: CdekApiPoint) => {
         const lat = parseFloat(p.geoLatitude);
         const lng = parseFloat(p.geoLongitude);
         const cityName = cities[p.cityCode] ?? null;
@@ -93,12 +85,12 @@ export async function loadCdekPointsForLeaflet(): Promise<LeafletPoint[] | null>
           hintContent: p.address,
           balloonContentHeader: title,
         };
-      }).filter((p) => p.lat !== 0 || p.lng !== 0);
+      }).filter((p: LeafletPoint) => p.lat !== 0 || p.lng !== 0);
     }
 
     // Старый формат GeoJSON FeatureCollection
     if (Array.isArray(raw?.features) && raw.features.length > 0) {
-      return raw.features.map((f) => {
+      return raw.features.map((f: CdekJsonFeature) => {
         const [lat, lng] = f.geometry.coordinates;
         return {
           lat,
