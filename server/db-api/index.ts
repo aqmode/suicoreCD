@@ -4,11 +4,15 @@ import express from 'express';
 import cors from 'cors';
 import { pool } from './db';
 import { authMiddleware, type AuthUser } from './auth';
+import { createSpotifyMiddleware } from '../spotify';
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Spotify (artist/albums/tracks) — в dev обрабатывает Vite, в проде — здесь
+app.use('/api/spotify', createSpotifyMiddleware(process.env as Record<string, string>));
 
 const reqUser = (req: express.Request): AuthUser => (req as express.Request & { user: AuthUser }).user;
 
