@@ -1,0 +1,51 @@
+.container {
+  position: fixed;
+  inset: 0;
+  overflow-x: visible;
+  overflow-y: hidden;
+}
+
+.track {
+  transition: transform 0.85s cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
+}
+
+.section {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: visible;
+  overflow-y: hidden;
+}
+
+.dots {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 50;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid #000;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.dot:hover {
+  transform: scale(1.4);
+}
+
+.dotActive {
+  background: #000;
+}

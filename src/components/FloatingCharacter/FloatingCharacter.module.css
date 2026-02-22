@@ -1,0 +1,42 @@
+.wrapper {
+  position: fixed;
+  bottom: -20px;
+  right: -10px;
+  z-index: -1;
+  pointer-events: none;
+  animation: floatDrift 8s ease-in-out infinite;
+}
+
+.image {
+  width: 340px;
+  height: auto;
+  opacity: 0.12;
+  user-select: none;
+}
+
+@keyframes floatDrift {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-12px, -18px);
+  }
+  40% {
+    transform: translate(8px, -10px);
+  }
+  60% {
+    transform: translate(-6px, 6px);
+  }
+  80% {
+    transform: translate(10px, -14px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (max-width: 768px) {
+  .image {
+    width: 200px;
+  }
+}

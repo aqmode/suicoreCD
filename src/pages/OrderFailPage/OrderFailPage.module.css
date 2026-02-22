@@ -1,0 +1,50 @@
+.page {
+  min-height: 100vh;
+  padding: 100px 40px 60px;
+}
+
+.inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: "Space Mono", monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  margin: 0 0 24px;
+}
+
+.text {
+  margin: 0 0 32px;
+  opacity: 0.85;
+}
+
+.link,
+.linkSecondary {
+  display: inline-block;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #000;
+  background: transparent;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.link:hover,
+.linkSecondary:hover {
+  border-color: #000;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.sep {
+  margin: 0 8px;
+}
+
+.linkSecondary {
+  border-color: rgba(0, 0, 0, 0.2);
+}

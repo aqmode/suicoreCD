@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/order/success", "destination": "/index.html" },
+    { "source": "/order/fail", "destination": "/index.html" }
+  ]
+}

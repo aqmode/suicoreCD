@@ -1,0 +1,152 @@
+.page {
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding: 100px 40px 60px;
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: 'Space Mono', monospace;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  opacity: 0.4;
+  margin: 0 0 48px;
+}
+
+.loadingWrap {
+  padding: 60px;
+  display: flex;
+  justify-content: center;
+}
+
+.spinner {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #eee;
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.section {
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.35;
+  margin: 0 0 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.cardCover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1.5px solid #1a1a1a;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.cardCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.card:hover .cardCover img {
+  transform: scale(1.04);
+}
+
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+.cardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cardName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardYear {
+  font-size: 0.75rem;
+  opacity: 0.4;
+}
+
+.empty {
+  font-size: 0.9rem;
+  opacity: 0.4;
+  padding: 40px 0;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 90px 20px 40px;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+  }
+}

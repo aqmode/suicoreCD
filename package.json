@@ -1,0 +1,50 @@
+{
+  "name": "temp-vite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "tsx server/db-api/index.ts",
+    "api": "tsx server/db-api/index.ts",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
+    "cdek": "^2.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^3.2.2",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
+    "maplibre-gl": "^5.18.0",
+    "pg": "^8.18.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-phone-number-input": "^3.4.14",
+    "react-router-dom": "^7.13.0",
+    "supercluster": "^8.0.1",
+    "undici": "^7.22.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/leaflet": "^1.9.21",
+    "@types/leaflet.markercluster": "^1.5.6",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.3.1"
+  }
+}

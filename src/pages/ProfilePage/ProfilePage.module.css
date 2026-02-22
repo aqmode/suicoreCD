@@ -1,0 +1,236 @@
+.page {
+  min-height: 100vh;
+  padding: 100px 40px 60px;
+}
+
+.inner {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  opacity: 0.6;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.15);
+}
+
+.tab,
+.tabActive {
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1.5px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.tab:hover {
+  opacity: 0.9;
+}
+
+.tabActive {
+  opacity: 1;
+  border-bottom-color: #000;
+}
+
+.title {
+  font-family: 'Space Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  margin: 0 0 32px;
+}
+
+.emptyOrders {
+  opacity: 0.6;
+  margin: 0;
+}
+
+.orderList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.orderCard {
+  padding: 20px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0;
+  background: #fafafa;
+}
+
+.orderMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.orderDate {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.orderTotal {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.orderDelivery {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  margin: 0 0 4px;
+}
+
+.orderDeliveryDays {
+  font-size: 0.72rem;
+  opacity: 0.5;
+  margin: 0 0 12px;
+}
+
+.orderStatusImg {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orderStatusImg img {
+  display: block;
+  max-width: 120px;
+  max-height: 56px;
+  object-fit: contain;
+}
+
+.orderStatusImg .orderClock {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.orderStatusImg .orderTruck {
+  max-width: 100px;
+  max-height: 48px;
+  object-fit: contain;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.avatarSection {
+  margin-bottom: 8px;
+}
+
+.avatarWrap {
+  display: block;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid #1a1a1a;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.04);
+  transition: opacity 0.25s ease;
+}
+
+.avatarWrap:hover {
+  opacity: 0.85;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 0.8rem;
+  opacity: 0.4;
+  text-transform: lowercase;
+}
+
+.fileInput {
+  display: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.45;
+}
+
+.input {
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+}
+
+.input:focus {
+  border-color: #000;
+}
+
+.input:disabled {
+  opacity: 0.6;
+}
+
+.saveBtn {
+  align-self: flex-start;
+  padding: 14px 32px;
+  background: #000;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  border: 1.5px solid #000;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: transparent;
+  color: #000;
+}
+
+.saveBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

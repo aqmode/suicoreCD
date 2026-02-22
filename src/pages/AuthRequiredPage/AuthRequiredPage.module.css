@@ -1,0 +1,52 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: #fafafa;
+}
+
+.inner {
+  max-width: 400px;
+  text-align: center;
+}
+
+.title {
+  font-family: "Space Mono", monospace;
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px;
+}
+
+.text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0.8;
+  margin: 0 0 32px;
+}
+
+.googleBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: #000;
+  background: #fff;
+  border: 1.5px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.googleBtn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.35);
+}

@@ -1,0 +1,15 @@
+.circle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 150px;
+  height: 150px;
+  margin-left: 0;
+  margin-top: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.050);
+  pointer-events: none;
+  z-index: -2;
+  transition: transform 0.08s ease-out;
+  will-change: transform;
+}

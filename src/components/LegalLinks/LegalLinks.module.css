@@ -1,0 +1,24 @@
+.wrap {
+  position: fixed;
+  bottom: 16px;
+  left: 20px;
+  z-index: 10;
+  opacity: 0.3;
+  pointer-events: auto;
+  font-size: 0.75rem;
+}
+
+.wrap .link {
+  font-size: inherit;
+  color: #000;
+  text-decoration: none;
+}
+
+.wrap .link:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+.sep {
+  opacity: 0.4;
+}

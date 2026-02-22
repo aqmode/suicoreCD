@@ -1,0 +1,111 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background 0.2s ease;
+  cursor: default;
+}
+
+.row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.number {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  opacity: 0.3;
+  min-width: 28px;
+  text-align: right;
+}
+
+.coverMini {
+  width: 44px;
+  height: 44px;
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.coverMini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trackInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trackName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.albumArtist {
+  font-size: 0.75rem;
+  opacity: 0.4;
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.duration {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+  opacity: 0.35;
+  min-width: 44px;
+  text-align: right;
+}
+
+.buyBtn {
+  padding: 8px 18px;
+  background: #000;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  border: 1.5px solid #000;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.buyBtn:hover {
+  background: transparent;
+  color: #000;
+}
+
+.buyBtn:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 640px) {
+  .row {
+    gap: 12px;
+    padding: 12px 12px;
+  }
+
+  .coverMini {
+    width: 36px;
+    height: 36px;
+  }
+
+  .duration {
+    display: none;
+  }
+}

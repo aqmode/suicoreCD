@@ -1,0 +1,91 @@
+.button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #000;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0.35;
+}
+
+.button:hover {
+  opacity: 1;
+}
+
+.arrow {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.vertical {
+  flex-direction: column;
+}
+
+.horizontal {
+  flex-direction: row;
+}
+
+.down:hover {
+  transform: translateY(4px);
+}
+
+.up:hover {
+  transform: translateY(-4px);
+}
+
+.left:hover {
+  transform: translateX(-4px);
+}
+
+.right:hover {
+  transform: translateX(4px);
+}
+
+.down .arrow,
+.up .arrow {
+  animation: bounceY 2s ease-in-out infinite;
+}
+
+.left .arrow,
+.right .arrow {
+  animation: bounceX 2s ease-in-out infinite;
+}
+
+@keyframes bounceY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+@keyframes bounceX {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+.up .arrow {
+  animation-name: bounceYUp;
+}
+
+@keyframes bounceYUp {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.left .arrow {
+  animation-name: bounceXLeft;
+}
+
+@keyframes bounceXLeft {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-5px); }
+}
