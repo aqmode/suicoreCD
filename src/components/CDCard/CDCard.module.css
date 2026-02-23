@@ -12,6 +12,29 @@
   gap: 40px;
 }
 
+/* Only the disc, no jewel case, no track name (track section on desktop) */
+.discOnly .visual {
+  width: 280px;
+  height: 280px;
+}
+
+.discOnly .disc {
+  width: 245px;
+  height: 245px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.discOnly.card:hover .disc {
+  transform: translate(-50%, -50%) translateX(20px) rotate(25deg);
+}
+
+/* Full visual (disc + jewel case), no info block */
+.visualOnly {
+  justify-content: center;
+}
+
 @keyframes fadeInUp {
   to {
     opacity: 1;

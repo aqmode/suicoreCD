@@ -16,6 +16,7 @@ import { useSectionScroll } from '../../hooks/useSectionScroll';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import AlbumHero from '../../components/AlbumHero/AlbumHero';
 import TrackCard from '../../components/TrackCard/TrackCard';
+import CDCard from '../../components/CDCard/CDCard';
 import ArrowButton from '../../components/ArrowButton/ArrowButton';
 import sStyles from '../../components/SectionScroll/SectionScroll.module.css';
 import type { Track } from '../../types';
@@ -254,6 +255,11 @@ export default function HomePage() {
               );
             })}
           </div>
+          {!isMobile && (
+            <div className={styles.diskWrap}>
+              <CDCard coverUrl={release.coverUrl} compact visualOnly />
+            </div>
+          )}
         </>
       ) : (
         <div className={styles.noTracks}>

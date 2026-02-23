@@ -73,6 +73,18 @@
   padding: 40px;
 }
 
+.diskWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+}
+
+@media (max-width: 768px) {
+  .diskWrap {
+    display: none;
+  }
+}
+
 .arrowUpWrap {
   margin-top: 24px;
 }
