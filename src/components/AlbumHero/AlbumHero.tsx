@@ -77,18 +77,18 @@ export default function AlbumHero({
               </div>
             </>
           )}
+
+          {isAlbum && onScrollDown && (
+            <div className={styles.arrowDownInFlow}>
+              <ArrowButton direction="down" onClick={onScrollDown} label="tracks" />
+            </div>
+          )}
         </div>
       </div>
 
       {hasNext && onNext && (
         <div className={styles.arrowRight}>
           <ArrowButton direction="right" onClick={onNext} />
-        </div>
-      )}
-
-      {isAlbum && onScrollDown && (
-        <div className={styles.arrowDown}>
-          <ArrowButton direction="down" onClick={onScrollDown} label="tracks" />
         </div>
       )}
     </div>

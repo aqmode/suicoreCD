@@ -123,11 +123,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #000;
 }
 
 .cardYear {
   font-size: 0.75rem;
   opacity: 0.4;
+  color: #000;
 }
 
 .empty {

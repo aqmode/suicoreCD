@@ -13,3 +13,9 @@
   transition: transform 0.08s ease-out;
   will-change: transform;
 }
+
+@media (max-width: 768px) {
+  .circle {
+    display: none;
+  }
+}

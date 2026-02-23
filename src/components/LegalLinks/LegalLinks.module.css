@@ -8,6 +8,50 @@
   font-size: 0.75rem;
 }
 
+.copyrightMobile {
+  display: none;
+}
+
+.copyrightDesktop {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .copyrightDesktop {
+    display: block;
+    position: fixed;
+    bottom: 16px;
+    right: 20px;
+    z-index: 10;
+    font-size: 0.75rem;
+    opacity: 0.3;
+    color: #000;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .wrap {
+    position: static;
+    margin-top: auto;
+    padding: 24px 20px;
+    text-align: center;
+    opacity: 0.5;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .copyrightMobile {
+    display: block;
+    margin-top: 12px;
+    font-size: 0.7rem;
+    opacity: 0.5;
+  }
+
+  .copyrightDesktop {
+    display: none !important;
+  }
+}
+
 .wrap .link {
   font-size: inherit;
   color: #000;

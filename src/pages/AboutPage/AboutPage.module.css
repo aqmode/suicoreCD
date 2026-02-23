@@ -138,6 +138,25 @@
   opacity: 1;
 }
 
+.mobileScroll {
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.mobileSection {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px 40px;
+}
+
+.mobileSection:last-child .bioInner {
+  padding: 0 24px 40px;
+}
+
 @media (max-width: 768px) {
   .heroInner {
     flex-direction: column;

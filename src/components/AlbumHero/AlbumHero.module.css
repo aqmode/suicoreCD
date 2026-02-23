@@ -146,29 +146,27 @@
   transform: scale(0.97);
 }
 
-/* ── Navigation arrows ── */
+/* ── Navigation arrows: над обложкой ── */
 
 .arrowLeft {
   position: absolute;
   left: 24px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 24px;
   z-index: 10;
 }
 
 .arrowRight {
   position: absolute;
-  right: 48px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 24px;
+  top: 24px;
   z-index: 10;
 }
 
-.arrowDown {
-  position: absolute;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
+/* Стрелка «к трекам» — в потоке, ниже текста */
+.arrowDownInFlow {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
   z-index: 10;
 }
 
@@ -201,5 +199,17 @@
   .divider {
     margin-left: auto;
     margin-right: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .arrowLeft {
+    left: 12px;
+    top: 16px;
+  }
+
+  .arrowRight {
+    right: 12px;
+    top: 16px;
   }
 }

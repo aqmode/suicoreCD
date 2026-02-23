@@ -11,11 +11,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSpotify } from '../../context/SpotifyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { getPriceRub, formatRub } from '../../lib/prices';
+import { getPriceRub } from '../../lib/prices';
 import { useSectionScroll } from '../../hooks/useSectionScroll';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import AlbumHero from '../../components/AlbumHero/AlbumHero';
 import TrackCard from '../../components/TrackCard/TrackCard';
-import CDCard from '../../components/CDCard/CDCard';
 import ArrowButton from '../../components/ArrowButton/ArrowButton';
 import sStyles from '../../components/SectionScroll/SectionScroll.module.css';
 import type { Track } from '../../types';
@@ -62,18 +62,24 @@ const SectionScrollWithRef = forwardRef<ScrollHandle, { children: ReactNode[] }>
   }
 );
 
+const SWIPE_THRESHOLD = 60;
+
 export default function HomePage() {
   const { releaseId } = useParams();
   const navigate = useNavigate();
   const { releases, loading, error, getAlbumTracks } = useSpotify();
   const { user } = useAuth();
   const { addItem, removeItem, items } = useCart();
+  const isMobile = useIsMobile();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(false);
   const [tracksError, setTracksError] = useState<string | null>(null);
   const scrollRef = useRef<ScrollHandle>(null);
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const release = releases[currentIndex];
   const isAlbum = release?.type === 'album';
@@ -119,6 +125,21 @@ export default function HomePage() {
     if (r) navigate(`/release/${r.id}`, { replace: true });
   };
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      touchEndX.current = e.changedTouches[0].clientX;
+      const diff = touchStartX.current - touchEndX.current;
+      if (Math.abs(diff) < SWIPE_THRESHOLD) return;
+      if (diff > 0) goTo(currentIndex + 1);
+      else goTo(currentIndex - 1);
+    },
+    [currentIndex, goTo]
+  );
+
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -161,19 +182,42 @@ export default function HomePage() {
   };
 
   const heroSection = (
-    <AlbumHero
-      key={`hero-${release.id}`}
-      release={release}
-      hasPrev={currentIndex > 0}
-      hasNext={currentIndex < releases.length - 1}
-      onPrev={() => goTo(currentIndex - 1)}
-      onNext={() => goTo(currentIndex + 1)}
-      onScrollDown={isAlbum ? () => scrollRef.current?.scrollTo(1) : undefined}
-      onAddToCart={!isAlbum && user ? handleAddReleaseToCart : undefined}
-      onRemoveFromCart={!isAlbum ? handleRemoveReleaseFromCart : undefined}
-      inCart={!isAlbum && releaseInCart}
-      priceRub={isAlbum ? undefined : priceRub}
-    />
+    <div
+      key={`hero-wrap-${release.id}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      style={isMobile ? { touchAction: 'pan-y' } : undefined}
+    >
+      <AlbumHero
+        key={`hero-${release.id}`}
+        release={release}
+        hasPrev={currentIndex > 0}
+        hasNext={currentIndex < releases.length - 1}
+        onPrev={() => goTo(currentIndex - 1)}
+        onNext={() => goTo(currentIndex + 1)}
+        onScrollDown={
+          isAlbum
+            ? () => {
+                if (isMobile && mobileScrollRef.current) {
+                  const second = mobileScrollRef.current.children[1];
+                  if (second) {
+                    (second as HTMLElement).scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    });
+                  }
+                } else {
+                  scrollRef.current?.scrollTo(1);
+                }
+              }
+            : undefined
+        }
+        onAddToCart={!isAlbum && user ? handleAddReleaseToCart : undefined}
+        onRemoveFromCart={!isAlbum ? handleRemoveReleaseFromCart : undefined}
+        inCart={!isAlbum && releaseInCart}
+        priceRub={isAlbum ? undefined : priceRub}
+      />
+    </div>
   );
 
   const trackSection = isAlbum ? (
@@ -210,28 +254,6 @@ export default function HomePage() {
               );
             })}
           </div>
-
-          {tracks[0] && (
-            <div className={styles.cdShowcase}>
-              <CDCard
-                coverUrl={release.coverUrl}
-                trackName={tracks[0].name}
-                albumName={release.name}
-                artistName="suicore"
-                price={formatRub(priceRub)}
-                onBuy={
-                  (() => {
-                    const cartItem = getCartItemForTrack(tracks[0].id);
-                    return cartItem
-                      ? () => removeItem(cartItem.id)
-                      : () => handleAddTrackToCart(tracks[0]);
-                  })()
-                }
-                inCart={!!getCartItemForTrack(tracks[0].id)}
-                compact
-              />
-            </div>
-          )}
         </>
       ) : (
         <div className={styles.noTracks}>
@@ -242,7 +264,14 @@ export default function HomePage() {
       <div className={styles.arrowUpWrap}>
         <ArrowButton
           direction="up"
-          onClick={() => scrollRef.current?.scrollTo(0)}
+          onClick={() => {
+            if (isMobile) {
+              mobileScrollRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' });
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              scrollRef.current?.scrollTo(0);
+            }
+          }}
           label="back"
         />
       </div>
@@ -250,6 +279,17 @@ export default function HomePage() {
   ) : null;
 
   const sections = trackSection ? [heroSection, trackSection] : [heroSection];
+
+  if (isMobile) {
+    return (
+      <div ref={mobileScrollRef} className={styles.mobileScroll} key={release?.id}>
+        <div className={styles.mobileSection}>{heroSection}</div>
+        {trackSection && (
+          <div className={styles.mobileSection}>{trackSection}</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <SectionScrollWithRef ref={scrollRef} key={release?.id}>

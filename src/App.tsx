@@ -37,7 +37,11 @@ function App() {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
 
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   const skipAuth =
+    isLocalhost ||
     pathname === AUTH_REDIRECT_PATH ||
     pathname === '/admin' ||
     pathname === '/order/success' ||
@@ -55,7 +59,10 @@ function App() {
       <Header />
       <CursorFollower />
       <FloatingCharacter />
-      <LegalLinks />
+      <div className="app-mobile-float" aria-hidden>
+        <img src="/suicore.png" alt="" draggable={false} />
+      </div>
+      <main className="app-main">
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/release/:releaseId" element={<HomePage />} />
@@ -73,6 +80,8 @@ function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </main>
+      <LegalLinks />
     </div>
   );
 }

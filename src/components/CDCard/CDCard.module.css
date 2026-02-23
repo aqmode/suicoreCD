@@ -33,6 +33,34 @@
   height: 290px;
 }
 
+@media (max-width: 768px) {
+  .compact .visual {
+    width: 220px;
+    height: 160px;
+  }
+
+  .compact .disc {
+    width: 120px;
+    height: 120px;
+    left: 100px;
+  }
+
+  .compact .jewelCase {
+    width: 140px;
+    height: 140px;
+  }
+
+  .compact .discHub {
+    width: 44px;
+    height: 44px;
+  }
+
+  .compact .discClamp {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 /* ── CD Disc ── */
 
 .disc {

@@ -1,9 +1,11 @@
 import { useSpotify } from '../../context/SpotifyContext';
 import SectionScroll from '../../components/SectionScroll/SectionScroll';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import styles from './AboutPage.module.css';
 
 export default function AboutPage() {
   const { artist, releases } = useSpotify();
+  const isMobile = useIsMobile();
 
   const heroSection = (
     <div className={styles.heroInner}>
@@ -70,6 +72,15 @@ export default function AboutPage() {
       )}
     </div>
   );
+
+  if (isMobile) {
+    return (
+      <div className={styles.mobileScroll}>
+        <div className={styles.mobileSection}>{heroSection}</div>
+        <div className={styles.mobileSection}>{bioSection}</div>
+      </div>
+    );
+  }
 
   return (
     <SectionScroll>
