@@ -44,6 +44,8 @@ export interface DeliveryMapPoint {
 
 interface Props {
   onSelect?: (point: DeliveryMapPoint) => void;
+  /** Выбранная точка ПВЗ — подсвечивается на карте */
+  selectedPoint?: DeliveryMapPoint | null;
 }
 
 async function searchAddress(query: string): Promise<NominatimResult[]> {
@@ -66,11 +68,19 @@ async function searchAddress(query: string): Promise<NominatimResult[]> {
   return Array.isArray(data) ? data : [];
 }
 
-export default function DeliveryMap({ onSelect }: Props) {
+const selectedMarkerIcon = L.divIcon({
+  className: "delivery-map-marker-selected",
+  html: "<span></span>",
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+});
+
+export default function DeliveryMap({ onSelect, selectedPoint = null }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const searchMarkerRef = useRef<L.Marker | null>(null);
+  const selectedMarkerRef = useRef<L.Marker | null>(null);
   const [loading, setLoading] = useState(true);
   const [error] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -202,10 +212,32 @@ export default function DeliveryMap({ onSelect }: Props) {
       if (searchMarkerRef.current && mapRef.current) {
         mapRef.current.removeLayer(searchMarkerRef.current);
       }
+      if (selectedMarkerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(selectedMarkerRef.current);
+      }
       map.remove();
       mapRef.current = null;
     };
   }, []);
+
+  // Подсветка выбранного ПВЗ
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (selectedMarkerRef.current) {
+      map.removeLayer(selectedMarkerRef.current);
+      selectedMarkerRef.current = null;
+    }
+    if (selectedPoint?.coords?.length === 2) {
+      const [lat, lng] = selectedPoint.coords;
+      const marker = L.marker([lat, lng], { icon: selectedMarkerIcon }).addTo(map);
+      selectedMarkerRef.current = marker;
+      marker.bindTooltip("Выбранный ПВЗ", {
+        permanent: false,
+        direction: "top",
+      });
+    }
+  }, [selectedPoint]);
 
   return (
     <div className={styles.wrapper}>

@@ -170,7 +170,7 @@ export default function CheckoutPage() {
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>Точка на карте</h2>
             <p className={styles.hint}>Выберите ПВЗ СДЭК на карте</p>
-            <DeliveryMap onSelect={handleMapSelect} />
+            <DeliveryMap onSelect={handleMapSelect} selectedPoint={mapPoint} />
             {submitAttempted && !mapPoint && (
               <p className={styles.fieldError} role="alert">
                 Выберите ПВЗ на карте
@@ -233,11 +233,6 @@ export default function CheckoutPage() {
           {submitAttempted && !agreePersonalData && (
             <p className={styles.fieldError} role="alert">
               Необходимо согласие с политикой и офертой.
-            </p>
-          )}
-          {submitAttempted && !canSubmit && (
-            <p className={styles.formSummaryError} role="alert">
-              Заполните все обязательные поля и выберите ПВЗ на карте.
             </p>
           )}
           {submitError && <p className={styles.submitError}>{submitError}</p>}

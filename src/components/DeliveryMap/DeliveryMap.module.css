@@ -260,3 +260,27 @@
   margin: 0;
   padding: 0;
 }
+
+/* Выбранный ПВЗ — крупный маркер с обводкой и пульсацией */
+.mapRoot :global(.delivery-map-marker-selected) {
+  background: none !important;
+  border: none !important;
+}
+
+.mapRoot :global(.delivery-map-marker-selected span) {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #000;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #000, 0 2px 8px rgba(0,0,0,0.4);
+  margin: 0;
+  padding: 0;
+  animation: delivery-map-selected-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes delivery-map-selected-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+}
