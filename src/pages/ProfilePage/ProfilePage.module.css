@@ -47,6 +47,22 @@
   border-bottom-color: #000;
 }
 
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: #000;
+  border-radius: 999px;
+}
+
 .title {
   font-family: 'Space Mono', monospace;
   font-size: 2rem;

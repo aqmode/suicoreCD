@@ -28,11 +28,30 @@ function orderStatusLabel(o: OrderRow): string {
   return 'Ожидает оплаты';
 }
 
-// Часы: перезапуск gif раз в 15 сек, чтобы анимация казалась медленнее
+const ORDERS_VIEWED_KEY = 'suicore_orders_viewed';
+
+function getOrdersViewed(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(ORDERS_VIEWED_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    return typeof parsed === 'object' && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function setOrdersViewed(orders: { id: string; status: string }[]) {
+  const next: Record<string, string> = { ...getOrdersViewed() };
+  for (const o of orders) next[o.id] = o.status;
+  localStorage.setItem(ORDERS_VIEWED_KEY, JSON.stringify(next));
+}
+
+// Часы: перезапуск gif раз в 40 сек, чтобы анимация была заметно медленнее
 function SlowClock({ className }: { className?: string }) {
   const [key, setKey] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setKey((k) => k + 1), 15000);
+    const t = setInterval(() => setKey((k) => k + 1), 40000);
     return () => clearInterval(t);
   }, []);
   return (
@@ -58,6 +77,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [ordersViewed, setOrdersViewedState] = useState<Record<string, string>>(getOrdersViewed);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -78,14 +98,28 @@ export default function ProfilePage() {
     load();
   }, [user, authLoading, navigate]);
 
+  // Загружаем заказы при заходе в профиль (и для вкладки, и для счётчика непросмотренных)
   useEffect(() => {
-    if (!user || tab !== 'orders') return;
+    if (!user) return;
+    setOrdersViewedState(getOrdersViewed());
     setOrdersLoading(true);
     api.apiGetOrders().then(({ data }) => {
       setOrders((data ?? []) as unknown as OrderRow[]);
       setOrdersLoading(false);
     });
-  }, [user, tab]);
+  }, [user]);
+
+  // При открытии вкладки «Заказы» помечаем заказы как просмотренные — счётчик обнуляется
+  useEffect(() => {
+    if (tab === 'orders' && orders.length > 0) {
+      setOrdersViewed(orders);
+      setOrdersViewedState((prev) => {
+        const next = { ...prev };
+        for (const o of orders) next[o.id] = o.status;
+        return next;
+      });
+    }
+  }, [tab, orders]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +156,8 @@ export default function ProfilePage() {
     setSearchParams(t === 'orders' ? { tab: 'orders' } : {});
   };
 
+  const unviewedCount = orders.filter((o) => ordersViewed[o.id] !== o.status).length;
+
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
@@ -137,8 +173,12 @@ export default function ProfilePage() {
             type="button"
             className={tab === 'orders' ? styles.tabActive : styles.tab}
             onClick={() => setTab('orders')}
+            aria-label={unviewedCount > 0 ? `Заказы: ${unviewedCount} непросмотренных` : 'Заказы'}
           >
             Заказы
+            {unviewedCount > 0 && (
+              <span className={styles.tabBadge}>{unviewedCount > 99 ? '99+' : unviewedCount}</span>
+            )}
           </button>
         </div>
 
