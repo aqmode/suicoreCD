@@ -108,7 +108,7 @@ export default function TrackCard({
       <div className={styles.trackInfo}>
         <span className={styles.trackName}>{track.name}</span>
         <span className={styles.albumArtist}>
-          {albumName} · {artistName}
+          {albumName} · {artistName} · 85г ·   физический CD носитель
         </span>
       </div>
 

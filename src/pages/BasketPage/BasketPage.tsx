@@ -4,7 +4,7 @@ import { formatRub } from '../../lib/prices';
 import styles from './BasketPage.module.css';
 
 export default function BasketPage() {
-  const { items, loading, removeItem, setQuantity, totalRub } = useCart();
+  const { items, loading, removeItem, setQuantity, totalRub, getEffectivePrice, hasAlbumDiscount } = useCart();
   const navigate = useNavigate();
 
   if (loading) {
@@ -50,7 +50,15 @@ export default function BasketPage() {
                 <span className={styles.name}>
                   {item.track_name ? `${item.release_name} — ${item.track_name}` : item.release_name}
                 </span>
-                <span className={styles.price}>{formatRub(item.price_rub)}</span>
+                <span className={styles.price}>
+                  {hasAlbumDiscount(item) && (
+                    <span className={styles.discountBadge}>−15%</span>
+                  )}
+                  {formatRub(getEffectivePrice(item))}
+                  {hasAlbumDiscount(item) && item.price_rub !== getEffectivePrice(item) && (
+                    <span className={styles.priceWas}> {formatRub(item.price_rub)}</span>
+                  )}
+                </span>
               </div>
               <div className={styles.quantity}>
                 <button

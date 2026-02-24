@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import LegalLinks from '../../components/LegalLinks/LegalLinks';
 import styles from './AuthRequiredPage.module.css';
 
 const BROWSE_WITHOUT_AUTH_KEY = 'suicore_browse_without_auth';
@@ -28,7 +27,6 @@ export default function AuthRequiredPage() {
 
   return (
     <div className={styles.page}>
-      <LegalLinks />
       <div className={styles.inner}>
         <h1 className={styles.title}>Вход в аккаунт</h1>
         <p className={styles.text}>

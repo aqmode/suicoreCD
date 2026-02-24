@@ -3,8 +3,16 @@ import type { Release } from '../../types';
 import ArrowButton from '../ArrowButton/ArrowButton';
 import { formatRub } from '../../lib/prices';
 
+function formatDuration(ms: number): string {
+  const m = Math.floor(ms / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 interface Props {
   release: Release;
+  /** Длительность трека в мс — только для синглов, показывается под названием */
+  singleTrackDurationMs?: number;
   onPrev?: () => void;
   onNext?: () => void;
   onScrollDown?: () => void;
@@ -18,6 +26,7 @@ interface Props {
 
 export default function AlbumHero({
   release,
+  singleTrackDurationMs,
   onPrev,
   onNext,
   onScrollDown,
@@ -29,24 +38,34 @@ export default function AlbumHero({
   hasNext,
 }: Props) {
   const isAlbum = release.type === 'album';
+  const isSingle = release.type === 'single';
   const handleCartClick = inCart ? onRemoveFromCart : onAddToCart;
   const showPurchase = priceRub != null && (onAddToCart || onRemoveFromCart);
+  const showSingleDetails = isSingle && singleTrackDurationMs != null;
 
   return (
     <div className={styles.hero}>
-      <div className={styles.arrowLeft}>
+      <div className={styles.arrowLeftDesktop}>
         {hasPrev && onPrev && <ArrowButton direction="left" onClick={onPrev} />}
       </div>
 
       <div className={styles.content}>
-        <div className={styles.coverWrapper}>
-          <img
-            src={release.coverUrl}
-            alt={release.name}
-            className={styles.cover}
-            draggable={false}
-          />
-          <div className={styles.coverShine} />
+        <div className={styles.coverArrowsWrap}>
+          <div className={styles.arrowLeftMobile}>
+            {hasPrev && onPrev && <ArrowButton direction="left" onClick={onPrev} />}
+          </div>
+          <div className={styles.coverWrapper}>
+            <img
+              src={release.coverUrl}
+              alt={release.name}
+              className={styles.cover}
+              draggable={false}
+            />
+            <div className={styles.coverShine} />
+          </div>
+          <div className={styles.arrowRightMobile}>
+            {hasNext && onNext && <ArrowButton direction="right" onClick={onNext} />}
+          </div>
         </div>
 
         <div className={styles.meta}>
@@ -54,10 +73,11 @@ export default function AlbumHero({
             {release.type === 'album' ? 'Album' : 'Single'}
           </span>
           <h1 className={styles.name}>{release.name}</h1>
-          <p className={styles.details}>
-            {release.releaseDate?.slice(0, 4)}
-            {isAlbum && ` · ${release.totalTracks} tracks`}
-          </p>
+          {showSingleDetails && (
+            <p className={styles.singleDetails}>
+              85г · физический CD носитель · {formatDuration(singleTrackDurationMs)}
+            </p>
+          )}
 
           {showPurchase && (
             <>
@@ -84,7 +104,7 @@ export default function AlbumHero({
         </div>
       </div>
 
-      <div className={styles.arrowRight}>
+      <div className={styles.arrowRightDesktop}>
         {hasNext && onNext && <ArrowButton direction="right" onClick={onNext} />}
       </div>
     </div>

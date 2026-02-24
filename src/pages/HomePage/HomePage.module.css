@@ -34,6 +34,7 @@
   align-items: center;
   padding: 80px 40px 40px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .trackHeader {
@@ -53,6 +54,19 @@
   font-size: 0.8rem;
   opacity: 0.4;
   margin: 0;
+  line-height: 1.45;
+}
+
+.albumDiscountNote {
+  width: 100%;
+  max-width: 680px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  opacity: 0.4;
+  margin: 24px 0 0;
+  padding-top: 16px;
+  text-align: center;
+  margin-top: 0;
 }
 
 .trackList {
@@ -83,10 +97,58 @@
   .diskWrap {
     display: none;
   }
+
+  .trackSubtitle {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    padding: 0 8px;
+    word-wrap: break-word;
+  }
+}
+
+.backAndFooter {
+  width: 200%;
+  margin-left: calc(-50vw + 50%);
+  margin-top: auto;
+  padding-top: 24px;
+  background: #ffffff00;
+  box-sizing: border-box;
 }
 
 .arrowUpWrap {
-  margin-top: 24px;
+  margin-bottom: 0;
+  opacity: 0;
+}
+
+.backButtonTransparent {
+  opacity: 0 !important;
+  pointer-events: auto;
+}
+
+.backButtonTransparent:hover {
+  opacity: 0 !important;
+}
+
+.albumFooter {
+  margin-top: 0;
+}
+
+/* Сингл на ПК: герой по центру экрана, ниже — футер, можно скроллить */
+.singleDesktopWrap {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.singleDesktopWrap > div {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
 }
 
 .mobileScroll {

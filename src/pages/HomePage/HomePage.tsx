@@ -17,6 +17,7 @@ import AlbumHero from '../../components/AlbumHero/AlbumHero';
 import TrackCard from '../../components/TrackCard/TrackCard';
 import CDCard from '../../components/CDCard/CDCard';
 import ArrowButton from '../../components/ArrowButton/ArrowButton';
+import SiteFooterContent from '../../components/SiteFooterContent/SiteFooterContent';
 import sStyles from '../../components/SectionScroll/SectionScroll.module.css';
 import type { Track } from '../../types';
 import styles from './HomePage.module.css';
@@ -96,13 +97,13 @@ export default function HomePage() {
   }, [releaseId, releases]);
 
   useEffect(() => {
-    if (!isMobile) {
+    if (!isMobile && isAlbum) {
       document.body.classList.add('section-scroll-page');
     }
     return () => {
       document.body.classList.remove('section-scroll-page');
     };
-  }, [isMobile]);
+  }, [isMobile, isAlbum]);
 
   const loadTracks = useCallback(async () => {
     const rel = releases[currentIndex];
@@ -198,6 +199,7 @@ export default function HomePage() {
       <AlbumHero
         key={`hero-${release.id}`}
         release={release}
+        singleTrackDurationMs={!isAlbum && tracks[0] ? tracks[0].durationMs : undefined}
         hasPrev={currentIndex > 0}
         hasNext={currentIndex < releases.length - 1}
         onPrev={() => goTo(currentIndex - 1)}
@@ -227,13 +229,13 @@ export default function HomePage() {
     </div>
   );
 
-  const showTrackSection = isAlbum || (release?.type === 'single' && tracks.length > 0);
+  const showTrackSection = isAlbum;
   const trackSection = showTrackSection ? (
     <div className={styles.trackSection} key={`tracks-${release.id}`} data-onboarding="track-section">
       <div className={styles.trackHeader}>
         <h2 className={styles.trackTitle}>{release.name}</h2>
         <p className={styles.trackSubtitle}>
-          {release.totalTracks} tracks · {release.releaseDate?.slice(0, 4)}
+          85г · физические CD носители
         </p>
       </div>
 
@@ -265,6 +267,11 @@ export default function HomePage() {
               );
             })}
           </div>
+          {isAlbum && (
+            <p className={styles.albumDiscountNote}>
+              Скидка 15% при покупке сета из 3-х дисков.
+            </p>
+          )}
           {!isMobile && (
             <div className={styles.diskWrap}>
               <CDCard coverUrl={release.coverUrl} compact visualOnly />
@@ -277,19 +284,23 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className={styles.arrowUpWrap}>
-        <ArrowButton
-          direction="up"
-          onClick={() => {
-            if (isMobile) {
-              mobileScrollRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' });
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-              scrollRef.current?.scrollTo(0);
-            }
-          }}
-          label="back"
-        />
+      <div className={styles.backAndFooter}>
+        <div className={styles.arrowUpWrap}>
+          <ArrowButton
+            className={styles.backButtonTransparent}
+            direction="up"
+            onClick={() => {
+              if (isMobile) {
+                mobileScrollRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                scrollRef.current?.scrollTo(0);
+              }
+            }}
+            label="back"
+          />
+        </div>
+        {!isMobile && <SiteFooterContent className={styles.albumFooter} compact />}
       </div>
     </div>
   ) : null;
@@ -303,6 +314,15 @@ export default function HomePage() {
         {trackSection && (
           <div className={styles.mobileSection}>{trackSection}</div>
         )}
+      </div>
+    );
+  }
+
+  /* Сингл на ПК: контент в потоке, страница скроллится до футера */
+  if (!isAlbum) {
+    return (
+      <div className={styles.singleDesktopWrap} key={release?.id}>
+        {heroSection}
       </div>
     );
   }

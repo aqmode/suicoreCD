@@ -26,7 +26,14 @@
   }
 }
 
-/* ── Cover ── */
+/* ── Обёртка обложки и стрелок (десктоп: стрелки по бокам, мобильный: стрелки по краям обложки по центру) ── */
+
+.coverArrowsWrap {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  flex-shrink: 0;
+}
 
 .coverWrapper {
   position: relative;
@@ -102,6 +109,16 @@
   opacity: 0.45;
   text-transform: lowercase;
   margin: 0;
+  line-height: 1.4;
+}
+
+.singleDetails {
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.5;
+  text-transform: lowercase;
+  margin: 0 0 10px;
+  line-height: 1.4;
 }
 
 .divider {
@@ -148,9 +165,9 @@
   transform: scale(0.97);
 }
 
-/* ── Navigation arrows: по вертикали на уровне середины обложки, по горизонтали — середина между краем и обложкой ── */
+/* ── Стрелки ПК: по бокам от всего контента (обложка + мета) ── */
 
-.arrowLeft {
+.arrowLeftDesktop {
   flex: 1;
   display: flex;
   justify-content: center;
@@ -159,13 +176,19 @@
   z-index: 10;
 }
 
-.arrowRight {
+.arrowRightDesktop {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
   min-width: 0;
   z-index: 10;
+}
+
+/* Стрелки мобильные — скрыты на ПК */
+.arrowLeftMobile,
+.arrowRightMobile {
+  display: none;
 }
 
 /* Стрелка «к трекам» — в потоке, ниже текста */
@@ -209,19 +232,58 @@
 }
 
 @media (max-width: 768px) {
-  .arrowLeft {
-    position: absolute;
-    left: 12px;
-    top: 16px;
-    flex: none;
-    justify-content: flex-start;
+  .hero {
+    justify-content: center;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
-  .arrowRight {
+  .arrowLeftDesktop,
+  .arrowRightDesktop {
+    display: none;
+  }
+
+  .arrowLeftMobile,
+  .arrowRightMobile {
+    display: flex;
+  }
+
+  .coverArrowsWrap {
+    position: relative;
+    padding-left: 52px;
+    padding-right: 52px;
+  }
+
+  .arrowLeftMobile {
     position: absolute;
-    right: 12px;
-    top: 16px;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    flex: none;
+    justify-content: flex-start;
+    padding: 20px 12px;
+    z-index: 5;
+  }
+
+  .arrowRightMobile {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     flex: none;
     justify-content: flex-end;
+    padding: 20px 12px;
+    z-index: 5;
+  }
+
+  .content {
+    justify-content: center;
+  }
+
+  .details {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    max-width: 100%;
+    word-wrap: break-word;
   }
 }

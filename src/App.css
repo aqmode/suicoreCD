@@ -9,6 +9,7 @@
 
 .app-main {
   flex: 1;
+  min-height: 100vh;
   overflow-x: hidden;
   max-width: 100%;
 }
@@ -38,7 +39,7 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    z-index: 5;
+    z-index: -1;
     pointer-events: none;
     width: 150px;
     height: auto;

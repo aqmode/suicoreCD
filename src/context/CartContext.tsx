@@ -4,6 +4,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   useRef,
   type ReactNode,
 } from 'react';
@@ -47,6 +48,8 @@ interface CartState {
   setQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   totalRub: number;
+  getEffectivePrice: (item: CartItem) => number;
+  hasAlbumDiscount: (item: CartItem) => boolean;
 }
 
 const CartContext = createContext<CartState>({
@@ -57,6 +60,8 @@ const CartContext = createContext<CartState>({
   setQuantity: async () => {},
   clearCart: async () => {},
   totalRub: 0,
+  getEffectivePrice: () => 0,
+  hasAlbumDiscount: () => false,
 });
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -203,7 +208,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   }, [user?.id, fetchCart]);
 
-  const totalRub = items.reduce((s, i) => s + i.price_rub * i.quantity, 0);
+  /** Количество дисков (track-позиций) в корзине по release_id. При 3 дисках одного альбома — скидка 15%. */
+  const releaseDiscCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const i of items) {
+      if (i.track_id != null) {
+        m.set(i.release_id, (m.get(i.release_id) ?? 0) + 1);
+      }
+    }
+    return m;
+  }, [items]);
+
+  const getEffectivePrice = useCallback(
+    (item: CartItem) => {
+      if (item.track_id == null) return item.price_rub;
+      if (releaseDiscCount.get(item.release_id) === 3) return Math.round(item.price_rub * 0.85);
+      return item.price_rub;
+    },
+    [releaseDiscCount]
+  );
+
+  const hasAlbumDiscount = useCallback(
+    (item: CartItem) => {
+      if (item.track_id == null) return false;
+      return releaseDiscCount.get(item.release_id) === 3;
+    },
+    [releaseDiscCount]
+  );
+
+  const totalRub = useMemo(
+    () => items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0),
+    [items, getEffectivePrice]
+  );
 
   return (
     <CartContext.Provider
@@ -215,6 +251,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setQuantity,
         clearCart,
         totalRub,
+        getEffectivePrice,
+        hasAlbumDiscount,
       }}
     >
       {children}

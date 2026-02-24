@@ -1,0 +1,208 @@
+.wrapper {
+  display: none !important;
+}
+
+/* На десктопе overlay и drawer не показываем */
+@media (min-width: 769px) {
+  .overlay,
+  .drawer {
+    display: none !important;
+  }
+}
+
+/* На мобильных: overlay и drawer всегда привязаны к viewport */
+@media (max-width: 768px) {
+  .wrapper {
+    display: block !important;
+    width: 100%;
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+
+  .overlay {
+    position: fixed !important;
+    inset: 0;
+    z-index: 1001;
+    pointer-events: none;
+  }
+
+  .overlayOpen {
+    pointer-events: auto;
+  }
+
+  .drawer {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100%;
+    max-height: 85vh;
+    z-index: 1002;
+    transform: translateY(100%); /* по умолчанию спрятан внизу за экраном */
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .drawerOpen {
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+.bar {
+  width: 100%;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 8px 16px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  background: transparent;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.trigger {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  color: rgba(0, 0, 0, 0.5);
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.trigger:active {
+  opacity: 0.7;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.overlayOpen {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: 85vh;
+  z-index: 1002;
+  background: #fff;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Открытая шторка: выезжает снизу вверх (переопределяется в мобильном медиа) */
+.drawerOpen {
+  transform: translateY(0);
+}
+
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #000;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
+  opacity: 0.7;
+}
+
+.closeBtn:active {
+  opacity: 1;
+}
+
+.content {
+  padding: 48px 20px 32px;
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.legal {
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.sep {
+  opacity: 0.7;
+}
+
+.copyright {
+  opacity: 0.9;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.navLink {
+  color: inherit;
+  text-decoration: underline;
+  padding: 8px 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLink:active {
+  opacity: 0.8;
+}

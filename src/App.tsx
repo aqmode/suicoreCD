@@ -17,7 +17,9 @@ import OrderSuccessPage from './pages/OrderSuccessPage/OrderSuccessPage';
 import OrderFailPage from './pages/OrderFailPage/OrderFailPage';
 import OfferPage from './pages/OfferPage/OfferPage';
 import TermsPage from './pages/TermsPage/TermsPage';
-import LegalLinks from './components/LegalLinks/LegalLinks';
+import Footer from './components/Footer/Footer';
+import MobileInfoDrawer from './components/MobileInfoDrawer/MobileInfoDrawer';
+import InfoPage from './pages/InfoPage/InfoPage';
 import Onboarding from './components/Onboarding/Onboarding';
 import './App.css';
 
@@ -37,6 +39,8 @@ const AUTH_REDIRECT_PATH = (() => {
 function App() {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
+  const isAbout = pathname === '/about';
+  const showFooter = !isAbout;
 
   const isLocalhost = (() => {
     try {
@@ -56,7 +60,8 @@ function App() {
     pathname === '/order/success' ||
     pathname === '/order/fail' ||
     pathname === '/offer' ||
-    pathname === '/terms';
+    pathname === '/terms' ||
+    pathname === '/info';
   const showAuthRequired = !loading && !user && !skipAuth;
 
   if (showAuthRequired) {
@@ -87,10 +92,12 @@ function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/offer" element={<OfferPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/info" element={<InfoPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </main>
-      <LegalLinks />
+      {showFooter && <Footer />}
+      <MobileInfoDrawer />
       <Onboarding />
     </div>
   );
