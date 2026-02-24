@@ -79,12 +79,25 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [ordersViewed, setOrdersViewedState] = useState<Record<string, string>>(getOrdersViewed);
 
+  const isLocalhost = (() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      const h = window.location?.hostname ?? '';
+      return h === 'localhost' || h === '127.0.0.1';
+    } catch {
+      return false;
+    }
+  })();
+
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !user && !isLocalhost) {
       navigate('/', { replace: true });
       return;
     }
-    if (!user) return;
+    if (!user) {
+      if (isLocalhost) setLoading(false);
+      return;
+    }
 
     const load = async () => {
       const { data } = await api.apiGetProfile();
@@ -96,7 +109,7 @@ export default function ProfilePage() {
       setLoading(false);
     };
     load();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, isLocalhost]);
 
   // Загружаем заказы при заходе в профиль (и для вкладки, и для счётчика непросмотренных)
   useEffect(() => {
@@ -157,6 +170,7 @@ export default function ProfilePage() {
   };
 
   const unviewedCount = orders.filter((o) => ordersViewed[o.id] !== o.status).length;
+  const showLocalhostMessage = !user && isLocalhost;
 
   return (
     <div className={styles.page}>
@@ -182,7 +196,11 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {tab === 'orders' ? (
+        {showLocalhostMessage ? (
+          <p className={styles.emptyOrders}>
+            На localhost вход отключён. Заказы и профиль доступны после входа на проде.
+          </p>
+        ) : tab === 'orders' ? (
           <>
             <h1 className={styles.title}>Заказы</h1>
             {ordersLoading ? (

@@ -1,0 +1,95 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 24px;
+  padding-bottom: 80px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.card {
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  border-radius: 8px;
+  padding: 24px 28px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1002;
+  pointer-events: auto;
+}
+
+.skipLink {
+  display: block;
+  margin-top: 12px;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  text-transform: lowercase;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.skipLink:hover {
+  opacity: 1;
+}
+
+.text {
+  font-size: 1.05rem;
+  line-height: 1.45;
+  margin-bottom: 20px;
+  text-transform: lowercase;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  background: #000;
+  color: #fff;
+  border: 2px solid #000;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn:hover {
+  background: transparent;
+  color: #000;
+}
+
+.highlight {
+  position: fixed;
+  border: 3px solid #fff;
+  border-radius: 6px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 1001;
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .overlay {
+    padding: 16px;
+    padding-bottom: 60px;
+  }
+
+  .card {
+    padding: 20px 22px;
+  }
+
+  .text {
+    font-size: 0.98rem;
+  }
+}

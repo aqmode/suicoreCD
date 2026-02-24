@@ -30,6 +30,7 @@ export default function CatalogPage() {
                       key={r.id}
                       className={styles.card}
                       onClick={() => navigate(`/release/${r.id}`)}
+                      data-onboarding={r.name.toLowerCase().includes('disk') ? 'release-disk-of-nature' : undefined}
                     >
                       <div className={styles.cardCover}>
                         <img src={r.coverUrl} alt={r.name} draggable={false} />

@@ -35,6 +35,75 @@
   object-fit: cover;
 }
 
+.previewBtn {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1.5px solid #000;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.previewBtn:hover {
+  background: #000;
+  color: #fff;
+}
+
+.previewBtn:hover .iconPlay,
+.previewBtn:hover .iconPause {
+  border-color: #fff;
+  background-color: #fff;
+}
+
+.previewBtn:active {
+  transform: scale(0.95);
+}
+
+.iconPlay {
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-style: solid;
+  border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent #000;
+  background: none;
+}
+
+.iconPause {
+  width: 10px;
+  height: 12px;
+  position: relative;
+}
+
+.iconPause::before,
+.iconPause::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 3px;
+  height: 12px;
+  background: #000;
+  border-radius: 1px;
+}
+
+.iconPause::before {
+  left: 0;
+}
+
+.iconPause::after {
+  right: 0;
+}
+
+.previewBtn:hover .iconPause::before,
+.previewBtn:hover .iconPause::after {
+  background: #fff;
+}
+
 .trackInfo {
   flex: 1;
   display: flex;
@@ -103,6 +172,25 @@
   .coverMini {
     width: 36px;
     height: 36px;
+  }
+
+  .previewBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .iconPlay {
+    border-width: 5px 0 5px 8px;
+  }
+
+  .iconPause::before,
+  .iconPause::after {
+    height: 10px;
+    width: 2px;
+  }
+
+  .iconPause {
+    height: 10px;
   }
 
   .duration {

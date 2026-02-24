@@ -83,13 +83,22 @@ button.navLink {
   min-height: unset;
 }
 
-.authGroup {
-  display: flex;
+.navGroupAuth {
+  display: inline-flex;
   align-items: center;
   gap: 32px;
-  margin-left: 24px;
+  margin-left: 20px;
   padding-left: 24px;
-  border-left: 1px solid #eee;
+  border-left: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.dropdownGroupAuth {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: 12px;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .cartCount {

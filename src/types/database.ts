@@ -5,6 +5,8 @@ export interface Profile {
   phone: string | null;
   created_at: string;
   updated_at: string;
+  onboarding_desktop_done?: boolean;
+  onboarding_mobile_done?: boolean;
 }
 
 export interface CartItem {

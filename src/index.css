@@ -11,6 +11,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -19,6 +20,34 @@ body {
   color: #000000;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Страницы с секционной прокруткой — без вертикального скроллбара */
+body.section-scroll-page {
+  overflow-y: hidden;
+}
+
+/* Кастомный вертикальный скроллбар (где есть обычная прокрутка) */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
 }
 
 a {

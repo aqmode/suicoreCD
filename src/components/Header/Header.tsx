@@ -1,13 +1,27 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import styles from './Header.module.css';
 
+function isLocalhost(): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    const h = window.location?.hostname ?? '';
+    return h === 'localhost' || h === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
 const Header = () => {
   const { user, signInWithGoogle, signOut } = useAuth();
   const { items } = useCart();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const showNavWithoutAuth = isLocalhost();
+  const isOrdersActive = location.pathname === '/profile' && location.search.includes('tab=orders');
+  const isProfileActive = location.pathname === '/profile' && !location.search.includes('tab=orders');
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -19,6 +33,7 @@ const Header = () => {
           `${styles.navLink} ${isActive ? styles.active : ''}`
         }
         onClick={closeMenu}
+        data-onboarding="nav-catalog"
       >
         catalog
       </NavLink>
@@ -46,34 +61,42 @@ const Header = () => {
           `${styles.navLink} ${isActive ? styles.active : ''}`
         }
         onClick={closeMenu}
+        data-onboarding="nav-basket"
       >
         basket
         {items.length > 0 && (
           <span className={styles.cartCount}>{items.length}</span>
         )}
       </NavLink>
-      {user ? (
-        <>
+      {user || showNavWithoutAuth ? (
+        <span className={styles.navGroupAuth}>
+          <NavLink
+            to="/profile?tab=orders"
+            className={`${styles.navLink} ${isOrdersActive ? styles.active : ''}`}
+            onClick={closeMenu}
+          >
+            orders
+          </NavLink>
           <NavLink
             to="/profile"
-            className={({ isActive }) =>
-              `${styles.navLink} ${isActive ? styles.active : ''}`
-            }
+            className={`${styles.navLink} ${isProfileActive ? styles.active : ''}`}
             onClick={closeMenu}
           >
             profile
           </NavLink>
-          <button
-            type="button"
-            className={styles.navLink}
-            onClick={() => {
-              signOut();
-              closeMenu();
-            }}
-          >
-            exit
-          </button>
-        </>
+          {user && (
+            <button
+              type="button"
+              className={styles.navLink}
+              onClick={() => {
+                signOut();
+                closeMenu();
+              }}
+            >
+              exit
+            </button>
+          )}
+        </span>
       ) : (
         <button
           type="button"
@@ -102,6 +125,7 @@ const Header = () => {
           onClick={() => setMenuOpen((o) => !o)}
           aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'}
           aria-expanded={menuOpen}
+          data-onboarding="nav-menu"
         >
           <span className={styles.hamburger} />
           <span className={styles.hamburger} />
@@ -116,6 +140,7 @@ const Header = () => {
               `${styles.dropdownLink} ${isActive ? styles.active : ''}`
             }
             onClick={closeMenu}
+            data-onboarding="nav-catalog-mobile"
           >
             catalog
           </NavLink>
@@ -143,31 +168,39 @@ const Header = () => {
               `${styles.dropdownLink} ${isActive ? styles.active : ''}`
             }
             onClick={closeMenu}
+            data-onboarding="nav-basket-mobile"
           >
             basket {items.length > 0 && `(${items.length})`}
           </NavLink>
-          {user ? (
-            <>
+          {user || showNavWithoutAuth ? (
+            <div className={styles.dropdownGroupAuth}>
+              <NavLink
+                to="/profile?tab=orders"
+                className={`${styles.dropdownLink} ${isOrdersActive ? styles.active : ''}`}
+                onClick={closeMenu}
+              >
+                orders
+              </NavLink>
               <NavLink
                 to="/profile"
-                className={({ isActive }) =>
-                  `${styles.dropdownLink} ${isActive ? styles.active : ''}`
-                }
+                className={`${styles.dropdownLink} ${isProfileActive ? styles.active : ''}`}
                 onClick={closeMenu}
               >
                 profile
               </NavLink>
-              <button
-                type="button"
-                className={styles.dropdownLink}
-                onClick={() => {
-                  signOut();
-                  closeMenu();
-                }}
-              >
-                exit
-              </button>
-            </>
+              {user && (
+                <button
+                  type="button"
+                  className={styles.dropdownLink}
+                  onClick={() => {
+                    signOut();
+                    closeMenu();
+                  }}
+                >
+                  exit
+                </button>
+              )}
+            </div>
           ) : (
             <button
               type="button"

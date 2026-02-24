@@ -34,7 +34,7 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
 app.patch('/api/profile', authMiddleware, async (req, res) => {
   try {
     const { id } = reqUser(req);
-    const { full_name, phone, avatar_url } = req.body;
+    const { full_name, phone, avatar_url, onboarding_desktop_done, onboarding_mobile_done } = req.body;
     await pool.query(
       `UPDATE public.profiles SET full_name = $1, phone = $2, updated_at = now()
        WHERE id = $3`,
@@ -44,6 +44,18 @@ app.patch('/api/profile', authMiddleware, async (req, res) => {
       await pool.query(
         'UPDATE public.profiles SET avatar_url = $1, updated_at = now() WHERE id = $2',
         [avatar_url, id]
+      );
+    }
+    if (typeof onboarding_desktop_done === 'boolean') {
+      await pool.query(
+        'UPDATE public.profiles SET onboarding_desktop_done = $1, updated_at = now() WHERE id = $2',
+        [onboarding_desktop_done, id]
+      );
+    }
+    if (typeof onboarding_mobile_done === 'boolean') {
+      await pool.query(
+        'UPDATE public.profiles SET onboarding_mobile_done = $1, updated_at = now() WHERE id = $2',
+        [onboarding_mobile_done, id]
       );
     }
     const r = await pool.query('SELECT * FROM public.profiles WHERE id = $1', [id]);

@@ -50,3 +50,25 @@
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.35);
 }
+
+.browseBtn {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  color: #000;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.browseBtn:hover {
+  opacity: 0.85;
+}

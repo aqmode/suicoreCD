@@ -77,6 +77,7 @@ export default function HomePage() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [tracksLoading, setTracksLoading] = useState(false);
   const [tracksError, setTracksError] = useState<string | null>(null);
+  const [previewPlayingId, setPreviewPlayingId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollHandle>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -96,9 +97,18 @@ export default function HomePage() {
     }
   }, [releaseId, releases]);
 
+  useEffect(() => {
+    if (!isMobile) {
+      document.body.classList.add('section-scroll-page');
+    }
+    return () => {
+      document.body.classList.remove('section-scroll-page');
+    };
+  }, [isMobile]);
+
   const loadTracks = useCallback(async () => {
     const rel = releases[currentIndex];
-    if (!rel || rel.type !== 'album') return;
+    if (!rel || (rel.type !== 'album' && rel.type !== 'single')) return;
     setTracksLoading(true);
     setTracksError(null);
     try {
@@ -113,10 +123,10 @@ export default function HomePage() {
   }, [releases, currentIndex, getAlbumTracks]);
 
   useEffect(() => {
-    if (isAlbum) loadTracks();
+    if (isAlbum || release?.type === 'single') loadTracks();
     else setTracks([]);
     setTracksError(null);
-  }, [isAlbum, loadTracks]);
+  }, [isAlbum, release?.type, loadTracks]);
 
   const goTo = (idx: number) => {
     if (idx < 0 || idx >= releases.length) return;
@@ -221,8 +231,9 @@ export default function HomePage() {
     </div>
   );
 
-  const trackSection = isAlbum ? (
-    <div className={styles.trackSection} key={`tracks-${release.id}`}>
+  const showTrackSection = isAlbum || (release?.type === 'single' && tracks.length > 0);
+  const trackSection = showTrackSection ? (
+    <div className={styles.trackSection} key={`tracks-${release.id}`} data-onboarding="track-section">
       <div className={styles.trackHeader}>
         <h2 className={styles.trackTitle}>{release.name}</h2>
         <p className={styles.trackSubtitle}>
@@ -251,6 +262,9 @@ export default function HomePage() {
                   onAddToCart={() => handleAddTrackToCart(track)}
                   onRemoveFromCart={() => handleRemoveTrackFromCart(track.id)}
                   inCart={inCartTrack}
+                  previewPlayingId={previewPlayingId}
+                  onPreviewPlay={setPreviewPlayingId}
+                  onPreviewStop={() => setPreviewPlayingId(null)}
                 />
               );
             })}

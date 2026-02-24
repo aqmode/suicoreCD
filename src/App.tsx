@@ -12,12 +12,13 @@ import BasketPage from './pages/BasketPage/BasketPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import GoogleRedirectPage from './pages/GoogleRedirectPage/GoogleRedirectPage';
 import AdminPage from './pages/AdminPage/AdminPage';
-import AuthRequiredPage from './pages/AuthRequiredPage/AuthRequiredPage';
+import AuthRequiredPage, { getBrowseWithoutAuth } from './pages/AuthRequiredPage/AuthRequiredPage';
 import OrderSuccessPage from './pages/OrderSuccessPage/OrderSuccessPage';
 import OrderFailPage from './pages/OrderFailPage/OrderFailPage';
 import OfferPage from './pages/OfferPage/OfferPage';
 import TermsPage from './pages/TermsPage/TermsPage';
 import LegalLinks from './components/LegalLinks/LegalLinks';
+import Onboarding from './components/Onboarding/Onboarding';
 import './App.css';
 
 const AUTH_REDIRECT_URI =
@@ -37,11 +38,19 @@ function App() {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
 
-  const isLocalhost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const isLocalhost = (() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      const h = window.location?.hostname ?? '';
+      return h === 'localhost' || h === '127.0.0.1';
+    } catch {
+      return false;
+    }
+  })();
+  const browseWithoutAuth = getBrowseWithoutAuth();
   const skipAuth =
     isLocalhost ||
+    browseWithoutAuth ||
     pathname === AUTH_REDIRECT_PATH ||
     pathname === '/admin' ||
     pathname === '/order/success' ||
@@ -82,6 +91,7 @@ function App() {
       </Routes>
       </main>
       <LegalLinks />
+      <Onboarding />
     </div>
   );
 }

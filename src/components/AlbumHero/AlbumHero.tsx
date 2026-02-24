@@ -34,11 +34,9 @@ export default function AlbumHero({
 
   return (
     <div className={styles.hero}>
-      {hasPrev && onPrev && (
-        <div className={styles.arrowLeft}>
-          <ArrowButton direction="left" onClick={onPrev} />
-        </div>
-      )}
+      <div className={styles.arrowLeft}>
+        {hasPrev && onPrev && <ArrowButton direction="left" onClick={onPrev} />}
+      </div>
 
       <div className={styles.content}>
         <div className={styles.coverWrapper}>
@@ -79,18 +77,16 @@ export default function AlbumHero({
           )}
 
           {isAlbum && onScrollDown && (
-            <div className={styles.arrowDownInFlow}>
+            <div className={styles.arrowDownInFlow} data-onboarding="scroll-to-tracks">
               <ArrowButton direction="down" onClick={onScrollDown} label="tracks" />
             </div>
           )}
         </div>
       </div>
 
-      {hasNext && onNext && (
-        <div className={styles.arrowRight}>
-          <ArrowButton direction="right" onClick={onNext} />
-        </div>
-      )}
+      <div className={styles.arrowRight}>
+        {hasNext && onNext && <ArrowButton direction="right" onClick={onNext} />}
+      </div>
     </div>
   );
 }

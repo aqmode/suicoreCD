@@ -33,7 +33,13 @@ export async function apiGetProfile() {
   return request<Record<string, unknown>>('/api/profile');
 }
 
-export async function apiUpdateProfile(body: { full_name?: string | null; phone?: string | null; avatar_url?: string | null }) {
+export async function apiUpdateProfile(body: {
+  full_name?: string | null;
+  phone?: string | null;
+  avatar_url?: string | null;
+  onboarding_desktop_done?: boolean;
+  onboarding_mobile_done?: boolean;
+}) {
   return request<Record<string, unknown>>('/api/profile', { method: 'PATCH', body: JSON.stringify(body) });
 }
 
