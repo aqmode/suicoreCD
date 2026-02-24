@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSpotify } from '../../context/SpotifyContext';
-import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { getPriceRub } from '../../lib/prices';
 import { useSectionScroll } from '../../hooks/useSectionScroll';
@@ -69,7 +68,6 @@ export default function HomePage() {
   const { releaseId } = useParams();
   const navigate = useNavigate();
   const { releases, loading, error, getAlbumTracks } = useSpotify();
-  const { user } = useAuth();
   const { addItem, removeItem, items } = useCart();
   const isMobile = useIsMobile();
 
@@ -169,7 +167,6 @@ export default function HomePage() {
 
   const priceRub = getPriceRub(release.name);
   const handleAddReleaseToCart = () => {
-    if (!user) return;
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },
       priceRub
@@ -180,7 +177,6 @@ export default function HomePage() {
     if (item) removeItem(item.id);
   };
   const handleAddTrackToCart = (track: Track) => {
-    if (!user) return;
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },
       priceRub,
