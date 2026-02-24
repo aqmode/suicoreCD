@@ -1,32 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { formatRub } from '../../lib/prices';
 import styles from './BasketPage.module.css';
 
 export default function BasketPage() {
-  const { user } = useAuth();
   const { items, loading, removeItem, setQuantity, totalRub } = useCart();
   const navigate = useNavigate();
-  if (!user) {
-    return (
-      <div className={styles.page}>
-        <div className={styles.inner}>
-          <h1 className={styles.title}>Корзина</h1>
-          <p className={styles.loginHint}>
-            Войдите в аккаунт, чтобы видеть корзину и оформить заказ.
-          </p>
-          <button
-            type="button"
-            className={styles.primaryBtn}
-            onClick={() => navigate('/')}
-          >
-            На главную
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

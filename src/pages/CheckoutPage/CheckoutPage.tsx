@@ -13,7 +13,7 @@ import DeliveryMap, { type DeliveryMapPoint } from "../../components/DeliveryMap
 import styles from "./CheckoutPage.module.css";
 
 export default function CheckoutPage() {
-  const { user } = useAuth();
+  const { user, signInWithGoogle } = useAuth();
   const { items, totalRub } = useCart();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -53,7 +53,8 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!user || items.length === 0) return;
+    if (items.length === 0) return;
+    if (!user) return;
     setSubmitAttempted(true);
     if (!canSubmit) return;
     setSubmitting(true);
@@ -236,13 +237,23 @@ export default function CheckoutPage() {
             </p>
           )}
           {submitError && <p className={styles.submitError}>{submitError}</p>}
-          <button
-            type="submit"
-            className={styles.orderBtn}
-            disabled={submitting}
-          >
-            {submitting ? "Переход к оплате…" : "Оплатить"}
-          </button>
+          {user ? (
+            <button
+              type="submit"
+              className={styles.orderBtn}
+              disabled={submitting}
+            >
+              {submitting ? "Переход к оплате…" : "Оплатить"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.orderBtn}
+              onClick={() => signInWithGoogle()}
+            >
+              Войти
+            </button>
+          )}
         </form>
       </div>
     </div>

@@ -223,7 +223,7 @@ export default function HomePage() {
               }
             : undefined
         }
-        onAddToCart={!isAlbum && user ? handleAddReleaseToCart : undefined}
+        onAddToCart={!isAlbum ? handleAddReleaseToCart : undefined}
         onRemoveFromCart={!isAlbum ? handleRemoveReleaseFromCart : undefined}
         inCart={!isAlbum && releaseInCart}
         priceRub={isAlbum ? undefined : priceRub}
