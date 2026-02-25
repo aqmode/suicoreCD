@@ -24,7 +24,7 @@ export default function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
-  const deliveryRub = getDeliveryCostRub(mapPoint?.coords ?? null);
+  const deliveryRub = getDeliveryCostRub(mapPoint?.coords ?? null, { cartTotalRub: totalRub });
   const totalWithDelivery = totalRub + deliveryRub;
 
   const fullNameValid = isValidFullName(fullName);
@@ -75,13 +75,16 @@ export default function CheckoutPage() {
           cover_url: i.cover_url,
           price_rub: i.price_rub,
           quantity: i.quantity,
+          track_id: i.track_id ?? null,
+          track_name: i.track_name ?? null,
         })),
       });
       if (orderErr || !order?.id) throw new Error(orderErr?.message ?? "Ошибка создания заказа");
-      const invId = Number((order as { inv_id?: number }).inv_id);
-      if (Number.isNaN(invId) || invId < 1) throw new Error("Нет номера счёта для оплаты. Перезапустите сервер после миграции БД.");
-      const { data: payment, error: payErr } = await api.apiCreatePayment(invId, totalWithDelivery);
-      if (payErr || !payment?.payUrl) throw new Error(payErr?.message ?? "Ошибка создания ссылки на оплату");
+      const { data: payment, error: payErr } = await api.apiCreatePayment((order as { id: string }).id, totalWithDelivery);
+      if (payErr || !payment?.payUrl) {
+        window.location.href = "https://suicore.space/order/fail";
+        return;
+      }
       window.location.href = payment.payUrl;
       return;
     } catch (e) {
@@ -132,9 +135,9 @@ export default function CheckoutPage() {
                 value={phone || undefined}
                 onChange={(v) => setPhone(v ?? "")}
                 className={(!phoneValid && (phone || submitAttempted)) ? `${styles.phoneWrap} ${styles.inputError}` : styles.phoneWrap}
-                inputClassName={styles.phoneInput}
                 numberInputProps={{
                   id: "phone",
+                  className: styles.phoneInput,
                   "aria-invalid": !!phone && !phoneValid,
                   "aria-describedby": phone && !phoneValid ? "phone-error" : undefined,
                 }}
@@ -203,7 +206,9 @@ export default function CheckoutPage() {
               <span className={styles.totalsValue}>{formatRub(totalRub)}</span>
             </div>
             <div className={styles.totalsRow}>
-              <span className={styles.totalsLabel}>Доставка</span>
+              <span className={styles.totalsLabel}>
+                Доставка{totalRub === 1 ? " (тестовый заказ — без доставки)" : ""}
+              </span>
               <span className={styles.totalsValue}>{formatRub(deliveryRub)}</span>
             </div>
             <div className={styles.totalsRowTotal}>

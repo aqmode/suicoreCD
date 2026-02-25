@@ -28,7 +28,8 @@ Vite проксирует запросы с `/api` (кроме `/api/spotify`) �
 ### Запуск API на сервере (чтобы не было 502 на проде)
 
 1. **На сервере** задайте переменные окружения для процесса API (`.env`, pm2 env, systemd):
-   - `DATABASE_URL`, `SUPABASE_JWT_SECRET`, при необходимости `VITE_SUPABASE_URL` / `SUPABASE_URL`, `ROBOKASSA_*`, `API_PORT=3001`
+   - `DATABASE_URL`, `SUPABASE_JWT_SECRET`, при необходимости `VITE_SUPABASE_URL` / `SUPABASE_URL`, `API_PORT=3001`
+   - **Оплата (YooKassa):** `YOOKASSA_ID`, `YOOKASSA_SECRET_KEY`; при необходимости `PAYMENT_BASE_URL` (по умолчанию https://suicore.space). Webhook: `POST /api/payments/yookassa` (URL в ЛК ЮKassa: https://suicore.space/api/payments/yookassa).
    - **Spotify (иначе «Spotify init failed»):** `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`; при необходимости прокси: `SPOTIFY_PROXY=http://user:pass@host:port` или `PROXY=host:port:user:pass`
 
 2. **Запустите процесс API** (должен работать постоянно):

@@ -166,7 +166,7 @@ export default function HomePage() {
     );
   }
 
-  const priceRub = getPriceRub(release.name);
+  const priceRub = getPriceRub(release.name, { isFirstInCatalog: currentIndex === 0 });
   const handleAddReleaseToCart = () => {
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },

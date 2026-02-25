@@ -155,6 +155,7 @@ export default function DeliveryMap({ onSelect, selectedPoint = null }: Props) {
     const map = L.map(containerRef.current, {
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
+      maxZoom: 19,
     });
 
     const tileLayer = L.tileLayer(TILE_URL, TILE_OPTIONS).addTo(map);

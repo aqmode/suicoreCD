@@ -41,8 +41,13 @@ function roundTo(value: number, step: number): number {
 /**
  * Стоимость доставки в рублях из Нижнего Новгорода до точки.
  * @param coords [lat, lon] выбранной точки (ПВЗ) или null — тогда базовая 540 ₽ (как до Москвы)
+ * @param options.cartTotalRub — сумма товаров; если 1 ₽ (тестовый товар), доставка 0 ₽ для проверки оплаты
  */
-export function getDeliveryCostRub(coords: [number, number] | null): number {
+export function getDeliveryCostRub(
+  coords: [number, number] | null,
+  options?: { cartTotalRub?: number }
+): number {
+  if (options?.cartTotalRub === 1) return 0; // тестовый заказ за 1 ₽ — без доставки для проверки оплаты
   if (!coords) return 540; // без точки — как до Москвы
   const km = distanceKm(coords[0], coords[1], ORIGIN_LAT, ORIGIN_LON);
   const raw = BASE_RUB + RUB_PER_KM * km;

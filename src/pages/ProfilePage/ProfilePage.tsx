@@ -10,6 +10,7 @@ import styles from './ProfilePage.module.css';
 
 interface OrderItem {
   release_name: string;
+  track_name: string | null;
   quantity: number;
 }
 
@@ -117,7 +118,7 @@ export default function ProfilePage() {
     load();
   }, [user, authLoading, navigate, isLocalhost]);
 
-  // Загружаем заказы при заходе в профиль (и для вкладки, и для счётчика непросмотренных)
+  // Загружаем заказы при заходе в профиль и при открытии вкладки «Заказы» (чтобы новый оплаченный заказ сразу отображался)
   useEffect(() => {
     if (!user) return;
     setOrdersViewedState(getOrdersViewed());
@@ -126,7 +127,7 @@ export default function ProfilePage() {
       setOrders((data ?? []) as unknown as OrderRow[]);
       setOrdersLoading(false);
     });
-  }, [user]);
+  }, [user, tab]);
 
   // При открытии вкладки «Заказы» помечаем заказы как просмотренные — счётчик обнуляется
   useEffect(() => {
@@ -225,44 +226,50 @@ export default function ProfilePage() {
                 <ul className={styles.orderList}>
                   {paidOrders.map((o) => (
                     <li key={o.id} className={styles.orderCard}>
-                      <div className={styles.orderMeta}>
-                        <span className={styles.orderDate}>
-                          {new Date(o.created_at).toLocaleString('ru', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                        <span className={styles.orderTotal}>{formatRub(o.total_rub)}</span>
+                      <div className={styles.orderCardInner}>
+                        <div className={styles.orderCardMain}>
+                          <div className={styles.orderMeta}>
+                            <span className={styles.orderDate}>
+                              {new Date(o.created_at).toLocaleString('ru', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                            <span className={styles.orderTotal}>{formatRub(o.total_rub)}</span>
+                          </div>
+                          <p className={styles.orderDelivery}>{orderStatusLabel(o)}</p>
+                          <p className={styles.orderDeliveryDays}>Доставка до 7 дней</p>
+                          {o.status === 'at_pvz' ? (
+                            <div className={styles.orderStatusImg}>
+                              <img src="/waiting/arrived.png" alt="" />
+                            </div>
+                          ) : o.status === 'shipped' ? (
+                            <div className={styles.orderStatusImg}>
+                              <TruckOnRoad className={styles.orderTruckWrap} />
+                            </div>
+                          ) : (
+                            <div className={styles.orderStatusImg}>
+                              <img src="/waiting/sclad.png" alt="" className={styles.orderSclad} />
+                              <SlowClock className={styles.orderClock} />
+                            </div>
+                          )}
+                        </div>
+                        {(o.items?.length ?? 0) > 0 && (
+                          <div className={styles.orderItemsPanel}>
+                            <div className={styles.orderItemsPanelTitle}>Товары</div>
+                            <ul className={styles.orderItemsList}>
+                              {o.items!.map((it, i) => (
+                                <li key={i}>
+                                  CD {it.track_name || it.release_name} × {it.quantity}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
-                      <p className={styles.orderDelivery}>{orderStatusLabel(o)}</p>
-                      {(o.items?.length ?? 0) > 0 && (
-                        <ul className={styles.orderItemsList}>
-                          {o.items!.map((it, i) => (
-                            <li key={i}>
-                              {it.release_name}
-                              {it.quantity > 1 ? ` × ${it.quantity}` : ''}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <p className={styles.orderDeliveryDays}>Доставка до 7 дней</p>
-                      {o.status === 'at_pvz' ? (
-                        <div className={styles.orderStatusImg}>
-                          <img src="/waiting/arrived.png" alt="" />
-                        </div>
-                      ) : o.status === 'shipped' ? (
-                        <div className={styles.orderStatusImg}>
-                          <TruckOnRoad className={styles.orderTruckWrap} />
-                        </div>
-                      ) : (
-                        <div className={styles.orderStatusImg}>
-                          <img src="/waiting/sclad.png" alt="" className={styles.orderSclad} />
-                          <SlowClock className={styles.orderClock} />
-                        </div>
-                      )}
                     </li>
                   ))}
                 </ul>

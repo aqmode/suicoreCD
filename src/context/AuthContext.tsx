@@ -9,11 +9,11 @@ import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { apiAuthByLogin } from '../lib/api';
 
-function getRedirectUrl(): string {
-  if (import.meta.env.VITE_AUTH_REDIRECT_URI) return import.meta.env.VITE_AUTH_REDIRECT_URI;
+export function getRedirectUrl(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     return `${window.location.origin.replace(/\/$/, '')}/google/redirect`;
   }
+  if (import.meta.env.VITE_AUTH_REDIRECT_URI) return import.meta.env.VITE_AUTH_REDIRECT_URI;
   return import.meta.env.VITE_APP_ORIGIN
     ? `${String(import.meta.env.VITE_APP_ORIGIN).replace(/\/$/, '')}/google/redirect`
     : 'http://localhost:8080/google/redirect';
@@ -43,6 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const redirectUrl = getRedirectUrl();
+    console.log('[Auth] Google redirect URL:', redirectUrl, '(добавьте этот URL в Supabase → Auth → Redirect URLs)');
+
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);

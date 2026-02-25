@@ -86,10 +86,38 @@
 }
 
 .orderCard {
-  padding: 20px;
   border: 1.5px solid rgba(0, 0, 0, 0.12);
   border-radius: 0;
   background: #fafafa;
+}
+
+.orderCardInner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+}
+
+.orderCardMain {
+  flex: 1;
+  min-width: 200px;
+}
+
+.orderItemsPanel {
+  min-width: 220px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+}
+
+.orderItemsPanelTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  margin-bottom: 10px;
 }
 
 .orderMeta {
@@ -118,18 +146,18 @@
 .orderItemsList {
   list-style: none;
   padding: 0;
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 0.85rem;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .orderItemsList li {
-  padding: 2px 0;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.orderItemsList li::before {
-  content: '· ';
-  margin-right: 4px;
+.orderItemsList li:last-child {
+  border-bottom: none;
 }
 
 .orderDeliveryDays {

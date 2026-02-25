@@ -101,16 +101,20 @@ export async function apiCreateOrder(body: {
   pvz_name?: string | null;
   total_rub: number;
   status?: string;
-  items: Array<{ release_id: string; release_name: string; cover_url: string | null; price_rub: number; quantity: number }>;
+  items: Array<{ release_id: string; release_name: string; cover_url: string | null; price_rub: number; quantity: number; track_id?: string | null; track_name?: string | null }>;
 }) {
   return request<{ id: string; inv_id: number }>('/api/orders', { method: 'POST', body: JSON.stringify(body) });
 }
 
-export async function apiCreatePayment(inv_id: number, out_sum: number) {
+export async function apiCreatePayment(order_id: string, out_sum: number) {
   return request<{ payUrl: string }>('/api/payments/create', {
     method: 'POST',
-    body: JSON.stringify({ inv_id, out_sum }),
+    body: JSON.stringify({ order_id, out_sum }),
   });
+}
+
+export async function apiGetOrderStatus(orderId: string) {
+  return request<{ id: string; status: string }>(`/api/order/${orderId}`);
 }
 
 // Admin
