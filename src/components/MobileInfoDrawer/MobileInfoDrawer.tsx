@@ -30,11 +30,15 @@ export default function MobileInfoDrawer() {
         </button>
         <div className={styles.content}>
           <div className={styles.legal}>
-            Самозанятый Нёма П.И., ИНН 526319925537, Нижний Новгород
+            Самозанятый Нёма П.И., ИНН 526319925537, г. Нижний Новгород
           </div>
           <div className={styles.contacts}>
             <a href="mailto:pprrottonn@gmail.com" className={styles.link}>
               pprrottonn@gmail.com
+            </a>
+            <span className={styles.sep}> · </span>
+            <a href="tel:+79036070794" className={styles.link}>
+              +7 903 607-07-94
             </a>
             <span className={styles.sep}> · </span>
             <a

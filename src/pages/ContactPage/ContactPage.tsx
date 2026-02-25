@@ -22,6 +22,13 @@ export default function ContactPage() {
             For bookings, collaborations, or inquiries about physical releases.
           </p>
 
+          <div className={styles.contactsBlock}>
+            <p className={styles.contactsTitle}>Служба поддержки (заказы, доставка, возврат):</p>
+            <p className={styles.contactLine}><a href="mailto:pprrottonn@gmail.com" className={styles.link}>pprrottonn@gmail.com</a></p>
+            <p className={styles.contactLine}><a href="tel:+79036070794" className={styles.link}>+7 903 607-07-94</a></p>
+            <p className={styles.contactLine}>г. Нижний Новгород</p>
+          </div>
+
           <div className={styles.links}>
             <div className={styles.linkGroup}>
               <span className={styles.linkLabel}>telegram</span>
