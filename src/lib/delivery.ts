@@ -2,8 +2,10 @@
  * Стоимость доставки из Нижнего Новгорода.
  * Москва (≈400 км) = 540 ₽ — эталон. Остальные регионы по расстоянию от Н. Новгорода.
  * Модель: базовая ставка + руб/км; округление до 50 ₽.
+ * Если задан VITE_PRICE_1RUB_NAME (тестовый режим) — доставка везде 1 ₽.
  */
 
+const ONE_RUBLE_DELIVERY = !!(import.meta.env.VITE_PRICE_1RUB_NAME as string)?.trim();
 const ORIGIN_LAT = 56.3287; // Нижний Новгород
 const ORIGIN_LON = 44.002;
 
@@ -41,13 +43,14 @@ function roundTo(value: number, step: number): number {
 /**
  * Стоимость доставки в рублях из Нижнего Новгорода до точки.
  * @param coords [lat, lon] выбранной точки (ПВЗ) или null — тогда базовая 540 ₽ (как до Москвы)
- * @param options.cartTotalRub — сумма товаров; если 1 ₽ (тестовый товар), доставка 0 ₽ для проверки оплаты
+ * @param options.cartTotalRub — сумма товаров; если задан VITE_PRICE_1RUB_NAME, доставка всегда 1 ₽
  */
 export function getDeliveryCostRub(
   coords: [number, number] | null,
   options?: { cartTotalRub?: number }
 ): number {
-  if (options?.cartTotalRub === 1) return 0; // тестовый заказ за 1 ₽ — без доставки для проверки оплаты
+  if (ONE_RUBLE_DELIVERY) return 1; // тестовый режим — доставка 1 ₽ везде
+  if (options?.cartTotalRub === 1) return 0; // тестовый заказ за 1 ₽ (без маркера) — без доставки
   if (!coords) return 540; // без точки — как до Москвы
   const km = distanceKm(coords[0], coords[1], ORIGIN_LAT, ORIGIN_LON);
   const raw = BASE_RUB + RUB_PER_KM * km;

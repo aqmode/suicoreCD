@@ -207,7 +207,7 @@ export default function CheckoutPage() {
             </div>
             <div className={styles.totalsRow}>
               <span className={styles.totalsLabel}>
-                Доставка{totalRub === 1 ? " (тестовый заказ — без доставки)" : ""}
+                Доставка{deliveryRub === 0 ? " (тестовый заказ — без доставки)" : ""}
               </span>
               <span className={styles.totalsValue}>{formatRub(deliveryRub)}</span>
             </div>
