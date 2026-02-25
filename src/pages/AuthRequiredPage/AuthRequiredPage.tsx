@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth, getRedirectUrl } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import styles from './AuthRequiredPage.module.css';
 
 const BROWSE_WITHOUT_AUTH_KEY = 'suicore_browse_without_auth';
@@ -32,9 +32,6 @@ export default function AuthRequiredPage() {
         <h1 className={styles.title}>Вход в аккаунт</h1>
         <p className={styles.text}>
           Чтобы пользоваться сайтом, необходимо зарегистрироваться или войти через Google.
-        </p>
-        <p className={styles.redirectHint}>
-          Redirect URL для Google: <strong>{getRedirectUrl()}</strong>
         </p>
         <button
           type="button"

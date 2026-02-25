@@ -28,18 +28,6 @@
   margin: 0 0 32px;
 }
 
-.redirectHint {
-  font-size: 0.8rem;
-  line-height: 1.4;
-  opacity: 0.85;
-  margin: 0 0 20px;
-  word-break: break-all;
-}
-
-.redirectHint strong {
-  font-weight: 600;
-}
-
 .googleBtn {
   display: inline-flex;
   align-items: center;
