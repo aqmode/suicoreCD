@@ -144,8 +144,9 @@
   background: #fafafa;
 }
 
-/* Стиль карты в духе сайта: минимальные контролы */
+/* Стиль карты в духе сайта: минимальные контролы (z-index ниже хедера, чтобы при скролле не залезали поверх) */
 .mapRoot :global(.leaflet-control-zoom) {
+  z-index: 1 !important;
   border: 1.5px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 0 !important;
   overflow: hidden;
