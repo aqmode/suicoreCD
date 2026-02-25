@@ -144,9 +144,14 @@
   background: #fafafa;
 }
 
-/* Стиль карты в духе сайта: минимальные контролы (z-index ниже хедера, чтобы при скролле не залезали поверх) */
-.mapRoot :global(.leaflet-control-zoom) {
+/* Панели контролов Leaflet (.leaflet-top/.leaflet-bottom по умолчанию 1000) — опускаем ниже хедера */
+.mapRoot :global(.leaflet-top),
+.mapRoot :global(.leaflet-bottom) {
   z-index: 1 !important;
+}
+
+/* Стиль карты в духе сайта: минимальные контролы */
+.mapRoot :global(.leaflet-control-zoom) {
   border: 1.5px solid rgba(0, 0, 0, 0.15) !important;
   border-radius: 0 !important;
   overflow: hidden;
