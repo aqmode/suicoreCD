@@ -15,6 +15,16 @@ app.use(express.urlencoded({ extended: true }));
 // Spotify (artist/albums/tracks) — в dev обрабатывает Vite, в проде — здесь
 app.use('/api/spotify', createSpotifyMiddleware(process.env as Record<string, string>));
 
+// Проверка доступности API (при 502 — убедитесь, что сервер запущен и слушает порт)
+app.get('/api/health', async (_req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(503).json({ ok: false, error: e instanceof Error ? e.message : 'DB' });
+  }
+});
+
 // ---------- Auth by login (shop_db login_users) ----------
 app.post('/api/auth/by-login', async (req, res) => {
   try {

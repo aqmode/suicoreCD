@@ -4,22 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import styles from './Header.module.css';
 
-function isLocalhost(): boolean {
-  try {
-    if (typeof window === 'undefined') return false;
-    const h = window.location?.hostname ?? '';
-    return h === 'localhost' || h === '127.0.0.1';
-  } catch {
-    return false;
-  }
-}
-
 const Header = () => {
   const { user, signInWithGoogle, signOut } = useAuth();
   const { items } = useCart();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const showNavWithoutAuth = isLocalhost();
   const isOrdersActive = location.pathname === '/profile' && location.search.includes('tab=orders');
   const isProfileActive = location.pathname === '/profile' && !location.search.includes('tab=orders');
 
@@ -68,7 +57,7 @@ const Header = () => {
           <span className={styles.cartCount}>{items.length}</span>
         )}
       </NavLink>
-      {user || showNavWithoutAuth ? (
+      {user ? (
         <span className={styles.navGroupAuth}>
           <NavLink
             to="/profile?tab=orders"
@@ -172,7 +161,7 @@ const Header = () => {
           >
             basket {items.length > 0 && `(${items.length})`}
           </NavLink>
-          {user || showNavWithoutAuth ? (
+          {user ? (
             <div className={styles.dropdownGroupAuth}>
               <NavLink
                 to="/profile?tab=orders"

@@ -23,18 +23,21 @@ import InfoPage from './pages/InfoPage/InfoPage';
 import Onboarding from './components/Onboarding/Onboarding';
 import './App.css';
 
-const AUTH_REDIRECT_URI =
-  import.meta.env.VITE_AUTH_REDIRECT_URI ||
-  (import.meta.env.VITE_APP_ORIGIN
-    ? `${import.meta.env.VITE_APP_ORIGIN.replace(/\/$/, '')}/google/redirect`
-    : 'http://localhost:5173/google/redirect');
-const AUTH_REDIRECT_PATH = (() => {
+function getAuthRedirectPath(): string {
+  const uri =
+    import.meta.env.VITE_AUTH_REDIRECT_URI ||
+    (typeof window !== 'undefined' && window.location?.origin
+      ? `${window.location.origin.replace(/\/$/, '')}/google/redirect`
+      : import.meta.env.VITE_APP_ORIGIN
+        ? `${String(import.meta.env.VITE_APP_ORIGIN).replace(/\/$/, '')}/google/redirect`
+        : 'http://localhost:8080/google/redirect');
   try {
-    return new URL(AUTH_REDIRECT_URI).pathname;
+    return new URL(uri).pathname;
   } catch {
     return '/google/redirect';
   }
-})();
+}
+const AUTH_REDIRECT_PATH = getAuthRedirectPath();
 
 function App() {
   const { user, loading } = useAuth();
@@ -42,18 +45,8 @@ function App() {
   const isAbout = pathname === '/about';
   const showFooter = !isAbout;
 
-  const isLocalhost = (() => {
-    try {
-      if (typeof window === 'undefined') return false;
-      const h = window.location?.hostname ?? '';
-      return h === 'localhost' || h === '127.0.0.1';
-    } catch {
-      return false;
-    }
-  })();
   const browseWithoutAuth = getBrowseWithoutAuth();
   const skipAuth =
-    isLocalhost ||
     browseWithoutAuth ||
     pathname === AUTH_REDIRECT_PATH ||
     pathname === '/admin' ||

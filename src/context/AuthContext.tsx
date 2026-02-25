@@ -9,11 +9,15 @@ import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { apiAuthByLogin } from '../lib/api';
 
-const REDIRECT_URL =
-  import.meta.env.VITE_AUTH_REDIRECT_URI ||
-  (import.meta.env.VITE_APP_ORIGIN
-    ? `${import.meta.env.VITE_APP_ORIGIN.replace(/\/$/, '')}/google/redirect`
-    : 'http://localhost:5173/google/redirect');
+function getRedirectUrl(): string {
+  if (import.meta.env.VITE_AUTH_REDIRECT_URI) return import.meta.env.VITE_AUTH_REDIRECT_URI;
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin.replace(/\/$/, '')}/google/redirect`;
+  }
+  return import.meta.env.VITE_APP_ORIGIN
+    ? `${String(import.meta.env.VITE_APP_ORIGIN).replace(/\/$/, '')}/google/redirect`
+    : 'http://localhost:8080/google/redirect';
+}
 
 interface AuthState {
   user: User | null;
@@ -56,9 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
+    const redirectTo = getRedirectUrl();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: REDIRECT_URL },
+      options: { redirectTo },
     });
   };
 
