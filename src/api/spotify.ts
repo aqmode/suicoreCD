@@ -13,7 +13,11 @@ interface TracksResponse {
 
 export async function fetchInitData(): Promise<InitResponse> {
   const res = await fetch(`${API}/init`);
-  if (!res.ok) throw new Error(`Spotify init failed: ${res.status}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const msg = (body as { error?: string })?.error || `Spotify init failed: ${res.status}`;
+    throw new Error(msg);
+  }
   return res.json();
 }
 

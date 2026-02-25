@@ -127,11 +127,23 @@ export function createSpotifyMiddleware(env: Record<string, string>): (req: Inco
     const url = req.url || '';
 
     if (url === '/init') {
+      if (!clientId || !clientSecret) {
+        res.statusCode = 503;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Spotify not configured: set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET on the server' }));
+        return;
+      }
       return handleInit(clientId, clientSecret, dispatcher, res);
     }
 
     const trackMatch = url.match(/^\/album\/([^/]+)\/tracks$/);
     if (trackMatch) {
+      if (!clientId || !clientSecret) {
+        res.statusCode = 503;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Spotify not configured' }));
+        return;
+      }
       return handleAlbumTracks(trackMatch[1], clientId, clientSecret, dispatcher, res);
     }
 

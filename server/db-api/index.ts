@@ -72,11 +72,18 @@ app.patch('/api/profile', authMiddleware, async (req, res) => {
   try {
     const { id } = reqUser(req);
     const { full_name, phone, avatar_url, onboarding_desktop_done, onboarding_mobile_done } = req.body;
-    await pool.query(
-      `UPDATE public.profiles SET full_name = $1, phone = $2, updated_at = now()
-       WHERE id = $3`,
-      [full_name ?? null, phone ?? null, id]
-    );
+    await pool.query('INSERT INTO public.profiles (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [id]);
+    if (full_name !== undefined || phone !== undefined) {
+      await pool.query(
+        `INSERT INTO public.profiles (id, full_name, phone, updated_at)
+         VALUES ($1, $2, $3, now())
+         ON CONFLICT (id) DO UPDATE SET
+           full_name = EXCLUDED.full_name,
+           phone = EXCLUDED.phone,
+           updated_at = now()`,
+        [id, full_name ?? null, phone ?? null]
+      );
+    }
     if (avatar_url != null) {
       await pool.query(
         'UPDATE public.profiles SET avatar_url = $1, updated_at = now() WHERE id = $2',
@@ -207,7 +214,20 @@ app.get('/api/orders', authMiddleware, async (req, res) => {
        WHERE user_id = $1 AND status IN ('paid', 'shipped', 'at_pvz') ORDER BY created_at DESC`,
       [id]
     );
-    res.json(r.rows);
+    const orders = r.rows as { id: string }[];
+    if (orders.length === 0) return res.json([]);
+    const ids = orders.map((o) => o.id);
+    const itemsR = await pool.query<{ order_id: string; release_name: string; quantity: number }>(
+      `SELECT order_id, release_name, quantity FROM public.order_items WHERE order_id = ANY($1::uuid[]) ORDER BY order_id`,
+      [ids]
+    );
+    const itemsByOrder: Record<string, { release_name: string; quantity: number }[]> = {};
+    for (const row of itemsR.rows) {
+      if (!itemsByOrder[row.order_id]) itemsByOrder[row.order_id] = [];
+      itemsByOrder[row.order_id].push({ release_name: row.release_name, quantity: row.quantity });
+    }
+    const result = orders.map((o) => ({ ...o, items: itemsByOrder[o.id] ?? [] }));
+    res.json(result);
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
   }

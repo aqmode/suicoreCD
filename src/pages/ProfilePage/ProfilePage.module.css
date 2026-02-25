@@ -115,6 +115,23 @@
   margin: 0 0 4px;
 }
 
+.orderItemsList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.orderItemsList li {
+  padding: 2px 0;
+}
+
+.orderItemsList li::before {
+  content: '· ';
+  margin-right: 4px;
+}
+
 .orderDeliveryDays {
   font-size: 0.72rem;
   opacity: 0.5;

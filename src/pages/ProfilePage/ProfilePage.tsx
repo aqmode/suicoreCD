@@ -8,6 +8,11 @@ import type { Profile } from '../../types/database';
 import TruckOnRoad from '../../components/TruckOnRoad/TruckOnRoad';
 import styles from './ProfilePage.module.css';
 
+interface OrderItem {
+  release_name: string;
+  quantity: number;
+}
+
 interface OrderRow {
   id: string;
   total_rub: number;
@@ -15,6 +20,7 @@ interface OrderRow {
   created_at: string;
   pvz_name: string | null;
   delivery_address: string | null;
+  items?: OrderItem[];
 }
 
 function orderStatusLabel(o: OrderRow): string {
@@ -138,8 +144,14 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
-    await api.apiUpdateProfile({ full_name: fullName || null, phone: phone || null });
+    const { data, error } = await api.apiUpdateProfile({ full_name: fullName || null, phone: phone || null });
     setSaving(false);
+    if (error) return;
+    if (data) {
+      setProfile(data as unknown as Profile);
+      setFullName((data.full_name as string) ?? '');
+      setPhone((data.phone as string) ?? '');
+    }
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,6 +238,16 @@ export default function ProfilePage() {
                         <span className={styles.orderTotal}>{formatRub(o.total_rub)}</span>
                       </div>
                       <p className={styles.orderDelivery}>{orderStatusLabel(o)}</p>
+                      {(o.items?.length ?? 0) > 0 && (
+                        <ul className={styles.orderItemsList}>
+                          {o.items!.map((it, i) => (
+                            <li key={i}>
+                              {it.release_name}
+                              {it.quantity > 1 ? ` × ${it.quantity}` : ''}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                       <p className={styles.orderDeliveryDays}>Доставка до 7 дней</p>
                       {o.status === 'at_pvz' ? (
                         <div className={styles.orderStatusImg}>
