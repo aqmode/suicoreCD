@@ -43,7 +43,8 @@ function App() {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
   const isAbout = pathname === '/about';
-  const showFooter = !isAbout;
+  const isReleasePage = pathname.startsWith('/release/');
+  const showFooter = !isAbout && !isReleasePage;
 
   const browseWithoutAuth = getBrowseWithoutAuth();
   const skipAuth =

@@ -300,7 +300,7 @@ export default function HomePage() {
             label="back"
           />
         </div>
-        {!isMobile && <SiteFooterContent className={styles.albumFooter} compact />}
+        <SiteFooterContent className={styles.albumFooter} compact />
       </div>
     </div>
   ) : null;
