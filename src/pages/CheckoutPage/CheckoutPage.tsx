@@ -40,10 +40,9 @@ export default function CheckoutPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [paymentTipOpen, setPaymentTipOpen] = useState(false);
 
-  const DELIVERY_SURCHARGE_RUB = 100;
   const deliveryRub = ONE_RUBLE_DELIVERY
     ? (pochtaPoint ? 1 : 0)
-    : (pochtaPoint ? pochtaPoint.delivery_rub + DELIVERY_SURCHARGE_RUB : 0);
+    : (pochtaPoint ? pochtaPoint.delivery_rub : 0);
   const totalWithDelivery = totalRub + deliveryRub;
 
   const fullNameValid = isValidFullName(fullName);
