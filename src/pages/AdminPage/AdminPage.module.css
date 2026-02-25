@@ -146,6 +146,22 @@
   border-color: #000;
 }
 
+.showUnpaidLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.showUnpaidCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #000;
+  cursor: pointer;
+}
+
 .searchResult {
   margin-bottom: 20px;
 }

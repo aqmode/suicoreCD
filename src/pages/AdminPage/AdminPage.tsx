@@ -50,12 +50,15 @@ const ORDER_STATUSES = [
   { value: "at_pvz", label: "Приехало" },
 ] as const;
 
+const PAID_STATUSES = ["paid", "shipped", "at_pvz"];
+
 export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderSearchId, setOrderSearchId] = useState("");
+  const [showUnpaid, setShowUnpaid] = useState(false);
 
   const loadData = useCallback(async (pwd: string) => {
     setLoading(true);
@@ -175,9 +178,10 @@ export default function AdminPage() {
   const users = data?.users ?? [];
   const allOrders = data?.orders ?? [];
   const orderSearchTrim = orderSearchId.trim().toLowerCase();
+  const ordersFilteredByStatus = showUnpaid ? allOrders : allOrders.filter((o) => PAID_STATUSES.includes(o.status));
   const orders = orderSearchTrim
-    ? allOrders.filter((o) => o.id.toLowerCase().includes(orderSearchTrim))
-    : allOrders;
+    ? ordersFilteredByStatus.filter((o) => o.id.toLowerCase().includes(orderSearchTrim))
+    : ordersFilteredByStatus;
 
   return (
     <div className={styles.page}>
@@ -218,8 +222,17 @@ export default function AdminPage() {
         <section className={styles.section}>
           <div className={styles.ordersHeader}>
             <h2 className={styles.sectionTitle}>
-              Заказы {orderSearchTrim ? `(${orders.length} из ${allOrders.length})` : `(${orders.length})`}
+              Заказы {orderSearchTrim ? `(${orders.length} из ${ordersFilteredByStatus.length})` : `(${orders.length})`}
             </h2>
+            <label className={styles.showUnpaidLabel}>
+              <input
+                type="checkbox"
+                checked={showUnpaid}
+                onChange={(e) => setShowUnpaid(e.target.checked)}
+                className={styles.showUnpaidCheckbox}
+              />
+              Показать неоплаченные (new)
+            </label>
             <input
               type="text"
               className={styles.searchInput}
