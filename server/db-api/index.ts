@@ -205,6 +205,8 @@ app.delete('/api/cart', authMiddleware, async (req, res) => {
 });
 
 // ---------- Orders ----------
+// Список заказов пользователя — только оплаченные/отправленные (без new), чтобы не показывать
+// неоплаченные/зависшие заказы в «Мои заказы» и блоке доставок.
 app.get('/api/orders', authMiddleware, async (req, res) => {
   try {
     const { id } = reqUser(req);

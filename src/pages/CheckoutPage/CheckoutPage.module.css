@@ -334,6 +334,90 @@
   opacity: 0.85;
 }
 
+/* Модальное окно подсказки при первом нажатии «Оплатить» */
+.tipOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.tipModal {
+  background: #fff;
+  max-width: 420px;
+  width: 100%;
+  padding: 28px 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.tipTitle {
+  font-family: "Space Mono", monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+.tipText {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  opacity: 0.9;
+}
+
+.tipList {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.tipList li {
+  margin-bottom: 4px;
+}
+
+.tipList li:last-child {
+  margin-bottom: 0;
+}
+
+.tipTextAfter {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 24px;
+  opacity: 0.8;
+}
+
+.tipClose {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: #000;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.tipClose:hover {
+  opacity: 0.9;
+}
+
+.tipClose:focus {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 90px 20px 40px;
@@ -341,5 +425,13 @@
 
   .title {
     font-size: 1.5rem;
+  }
+
+  .tipModal {
+    padding: 24px 20px;
+  }
+
+  .tipTitle {
+    font-size: 1.05rem;
   }
 }

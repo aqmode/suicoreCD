@@ -12,6 +12,21 @@ import { isValidFullName, fullNameError } from "../../lib/validation";
 import DeliveryMap, { type DeliveryMapPoint } from "../../components/DeliveryMap/DeliveryMap";
 import styles from "./CheckoutPage.module.css";
 
+const PAYMENT_TIP_COOKIE = "suicore_payment_tip_seen";
+
+function getPaymentTipSeen(): boolean {
+  if (typeof document === "undefined") return true;
+  return document.cookie.split(";").some((s) => s.trim().startsWith(`${PAYMENT_TIP_COOKIE}=`));
+}
+
+function setPaymentTipSeen(): void {
+  try {
+    document.cookie = `${PAYMENT_TIP_COOKIE}=1; path=/; max-age=31536000; SameSite=Lax`;
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function CheckoutPage() {
   const { user, signInWithGoogle } = useAuth();
   const { items, totalRub } = useCart();
@@ -23,6 +38,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [paymentTipOpen, setPaymentTipOpen] = useState(false);
 
   const deliveryRub = getDeliveryCostRub(mapPoint?.coords ?? null, { cartTotalRub: totalRub });
   const totalWithDelivery = totalRub + deliveryRub;
@@ -57,6 +73,11 @@ export default function CheckoutPage() {
     if (!user) return;
     setSubmitAttempted(true);
     if (!canSubmit) return;
+    if (!getPaymentTipSeen()) {
+      setPaymentTipSeen();
+      setPaymentTipOpen(true);
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -261,6 +282,41 @@ export default function CheckoutPage() {
           )}
         </form>
       </div>
+
+      {paymentTipOpen && (
+        <div
+          className={styles.tipOverlay}
+          onClick={() => setPaymentTipOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="payment-tip-title"
+        >
+          <div className={styles.tipModal} onClick={(ev) => ev.stopPropagation()}>
+            <h2 id="payment-tip-title" className={styles.tipTitle}>
+              Если у вас проблемы с оплатой
+            </h2>
+            <p className={styles.tipText}>
+              Если страница не грузится или оплата не проходит, попробуйте:
+            </p>
+            <ul className={styles.tipList}>
+              <li>выключить Zapret;</li>
+              <li>отключить прокси или VPN;</li>
+              <li>перезагрузить страницу (Ctrl+F5).</li>
+            </ul>
+            <p className={styles.tipTextAfter}>
+              После этого можно снова нажать «Оплатить».
+            </p>
+            <button
+              type="button"
+              className={styles.tipClose}
+              onClick={() => setPaymentTipOpen(false)}
+              autoFocus
+            >
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
