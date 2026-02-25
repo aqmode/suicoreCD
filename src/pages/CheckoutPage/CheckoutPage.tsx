@@ -6,13 +6,13 @@ import "react-phone-number-input/style.css";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import * as api from "../../lib/api";
-import { getDeliveryCostRub } from "../../lib/delivery";
 import { formatRub } from "../../lib/prices";
 import { isValidFullName, fullNameError } from "../../lib/validation";
-import DeliveryMap, { type DeliveryMapPoint } from "../../components/DeliveryMap/DeliveryMap";
+import PochtaWidget, { type PochtaPoint } from "../../components/PochtaWidget/PochtaWidget";
 import styles from "./CheckoutPage.module.css";
 
 const PAYMENT_TIP_COOKIE = "suicore_payment_tip_seen";
+const ONE_RUBLE_DELIVERY = !!(import.meta.env.VITE_PRICE_1RUB_NAME as string)?.trim();
 
 function getPaymentTipSeen(): boolean {
   if (typeof document === "undefined") return true;
@@ -34,13 +34,16 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [agreePersonalData, setAgreePersonalData] = useState(false);
-  const [mapPoint, setMapPoint] = useState<DeliveryMapPoint | null>(null);
+  const [pochtaPoint, setPochtaPoint] = useState<PochtaPoint | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [paymentTipOpen, setPaymentTipOpen] = useState(false);
 
-  const deliveryRub = getDeliveryCostRub(mapPoint?.coords ?? null, { cartTotalRub: totalRub });
+  const DELIVERY_SURCHARGE_RUB = 100;
+  const deliveryRub = ONE_RUBLE_DELIVERY
+    ? (pochtaPoint ? 1 : 0)
+    : (pochtaPoint ? pochtaPoint.delivery_rub + DELIVERY_SURCHARGE_RUB : 0);
   const totalWithDelivery = totalRub + deliveryRub;
 
   const fullNameValid = isValidFullName(fullName);
@@ -51,10 +54,10 @@ export default function CheckoutPage() {
     fullNameValid &&
     phoneValid &&
     agreePersonalData &&
-    !!mapPoint;
+    !!pochtaPoint;
 
-  const handleMapSelect = useCallback((point: DeliveryMapPoint) => {
-    setMapPoint(point);
+  const handlePochtaSelect = useCallback((point: PochtaPoint) => {
+    setPochtaPoint(point);
   }, []);
 
   useEffect(() => {
@@ -85,9 +88,9 @@ export default function CheckoutPage() {
         customer_name: fullName.trim(),
         customer_phone: phone,
         customer_email: email.trim(),
-        delivery_address: mapPoint?.address ?? null,
-        pvz_code: mapPoint?.code ?? null,
-        pvz_name: mapPoint?.name ?? null,
+        delivery_address: pochtaPoint?.address ?? null,
+        pvz_code: pochtaPoint?.pvz_code ?? null,
+        pvz_name: pochtaPoint?.pvz_name ?? null,
         total_rub: totalWithDelivery,
         status: "new",
         items: items.map((i) => ({
@@ -193,29 +196,27 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Точка на карте</h2>
-            <p className={styles.hint}>Выберите ПВЗ СДЭК на карте</p>
-            <DeliveryMap onSelect={handleMapSelect} selectedPoint={mapPoint} />
-            {submitAttempted && !mapPoint && (
+            <h2 className={styles.sectionTitle}>Доставка Почтой России</h2>
+            <p className={styles.hint}>Выберите отделение на карте</p>
+            <PochtaWidget onSelect={handlePochtaSelect} />
+            {submitAttempted && !pochtaPoint && (
               <p className={styles.fieldError} role="alert">
-                Выберите ПВЗ на карте
+                Выберите отделение Почты России на карте
               </p>
             )}
-            {mapPoint && (
+            {pochtaPoint && (
               <div className={styles.pvzInfo}>
-                {mapPoint.code != null && mapPoint.code !== "" && (
-                  <div className={styles.pvzRow}>
-                    <span className={styles.pvzLabel}>Код ПВЗ:</span>
-                    <span className={styles.pvzValue}>{mapPoint.code}</span>
-                  </div>
-                )}
                 <div className={styles.pvzRow}>
-                  <span className={styles.pvzLabel}>Адрес:</span>
-                  <span className={styles.pvzValue}>{mapPoint.address}</span>
+                  <span className={styles.pvzLabel}>Код ОПС:</span>
+                  <span className={styles.pvzValue}>{pochtaPoint.pvz_code}</span>
                 </div>
                 <div className={styles.pvzRow}>
-                  <span className={styles.pvzLabel}>Координаты:</span>
-                  <span className={styles.pvzValue}>{mapPoint.coords[0].toFixed(5)}, {mapPoint.coords[1].toFixed(5)}</span>
+                  <span className={styles.pvzLabel}>Адрес:</span>
+                  <span className={styles.pvzValue}>{pochtaPoint.address}</span>
+                </div>
+                <div className={styles.pvzRow}>
+                  <span className={styles.pvzLabel}>Стоимость доставки:</span>
+                  <span className={styles.pvzValue}>{formatRub(deliveryRub)}</span>
                 </div>
               </div>
             )}

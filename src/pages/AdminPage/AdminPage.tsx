@@ -298,8 +298,8 @@ export default function AdminPage() {
                   <th>Получатель</th>
                   <th>Телефон</th>
                   <th>Email</th>
-                  <th>Адрес / ПВЗ</th>
-                  <th>Код ПВЗ</th>
+                  <th>Адрес / ОПС</th>
+                  <th>Код ОПС</th>
                   <th>Сумма</th>
                   <th>Статус</th>
                   <th></th>
@@ -316,7 +316,7 @@ export default function AdminPage() {
                     <td>{o.customer_phone}</td>
                     <td>{o.customer_email}</td>
                     <td>
-                      {o.delivery_address ?? (o.pvz_name ? "ПВЗ: " + o.pvz_name : "—")}
+                      {o.delivery_address ?? (o.pvz_name ? "ОПС: " + o.pvz_name : "—")}
                     </td>
                     <td className={styles.mono}>{o.pvz_code ?? "—"}</td>
                     <td>{formatRub(o.total_rub)}</td>

@@ -29,8 +29,8 @@ function orderStatusLabel(o: OrderRow): string {
   if (o.status === 'paid') return 'Оплачено, ожидает отправки';
   if (o.status === 'shipped') return 'Отправлено';
   if (o.status === 'at_pvz') {
-    const addr = o.pvz_name || o.delivery_address || 'ПВЗ';
-    return `Ждёт в ПВЗ [${addr}]`;
+    const addr = o.pvz_name || o.delivery_address || 'ОПС';
+    return `Ждёт в ОПС [${addr}]`;
   }
   return 'Ожидает оплаты';
 }
