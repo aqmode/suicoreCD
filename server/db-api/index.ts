@@ -2,6 +2,7 @@ import 'dotenv/config';
 import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
+import bcrypt from 'bcryptjs';
 import { pool } from './db';
 import { authMiddleware, type AuthUser } from './auth';
 import { createSpotifyMiddleware } from '../spotify';
@@ -13,6 +14,32 @@ app.use(express.urlencoded({ extended: true }));
 
 // Spotify (artist/albums/tracks) — в dev обрабатывает Vite, в проде — здесь
 app.use('/api/spotify', createSpotifyMiddleware(process.env as Record<string, string>));
+
+// ---------- Auth by login (shop_db login_users) ----------
+app.post('/api/auth/by-login', async (req, res) => {
+  try {
+    const { login, password } = req.body ?? {};
+    if (!login || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Нужны логин и пароль' });
+    }
+    const r = await pool.query<{ password_hash: string; email: string }>(
+      'SELECT password_hash, email FROM public.login_users WHERE login = $1',
+      [String(login).trim()]
+    );
+    if (r.rows.length === 0) {
+      return res.status(401).json({ error: 'Неверный логин или пароль.' });
+    }
+    const { password_hash: hash, email } = r.rows[0];
+    const ok = await bcrypt.compare(password, hash);
+    if (!ok) {
+      return res.status(401).json({ error: 'Неверный логин или пароль.' });
+    }
+    res.json({ email });
+  } catch (e) {
+    console.error('[auth/by-login]', e);
+    res.status(500).json({ error: e instanceof Error ? e.message : 'Ошибка сервера' });
+  }
+});
 
 const reqUser = (req: express.Request): AuthUser => (req as express.Request & { user: AuthUser }).user;
 

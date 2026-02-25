@@ -28,6 +28,15 @@ async function request<T>(
   return { data, error: null };
 }
 
+// Auth by login (shop_admin): returns email for Supabase sign-in
+export async function apiAuthByLogin(login: string, password: string) {
+  return request<{ email: string }>('/api/auth/by-login', {
+    method: 'POST',
+    body: JSON.stringify({ login, password }),
+    token: null,
+  });
+}
+
 // Profile
 export async function apiGetProfile() {
   return request<Record<string, unknown>>('/api/profile');

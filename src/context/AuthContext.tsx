@@ -7,6 +7,7 @@ import {
 } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { apiAuthByLogin } from '../lib/api';
 
 const REDIRECT_URL =
   import.meta.env.VITE_AUTH_REDIRECT_URI ||
@@ -19,6 +20,7 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithYooKassa: (login: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthState>({
   session: null,
   loading: true,
   signInWithGoogle: async () => {},
+  signInWithYooKassa: async () => ({}),
   signOut: async () => {},
 });
 
@@ -59,13 +62,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const signInWithYooKassa = async (login: string, password: string) => {
+    const { data, error: apiError } = await apiAuthByLogin(login.trim(), password);
+    if (apiError || !data?.email) {
+      return { error: apiError?.message ?? 'Неверный логин или пароль.' };
+    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password,
+    });
+    if (error) return { error: error.message };
+    return {};
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, signInWithGoogle, signOut }}
+      value={{ user, session, loading, signInWithGoogle, signInWithYooKassa, signOut }}
     >
       {children}
     </AuthContext.Provider>

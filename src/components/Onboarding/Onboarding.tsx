@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSpotify } from '../../context/SpotifyContext';
 import { useIsMobile } from '../../hooks/useMediaQuery';
-import { getBrowseWithoutAuth } from '../../pages/AuthRequiredPage/AuthRequiredPage';
+import { getBrowseWithoutAuth, FORCE_ONBOARDING_AFTER_LOGIN_KEY } from '../../pages/AuthRequiredPage/AuthRequiredPage';
 import * as api from '../../lib/api';
 import styles from './Onboarding.module.css';
 
@@ -80,6 +80,16 @@ export default function Onboarding() {
       setLoading(false);
       setVisible(false);
       return;
+    }
+    try {
+      if (typeof window !== 'undefined' && sessionStorage.getItem(FORCE_ONBOARDING_AFTER_LOGIN_KEY) === '1') {
+        sessionStorage.removeItem(FORCE_ONBOARDING_AFTER_LOGIN_KEY);
+        setVisible(true);
+        setLoading(false);
+        return;
+      }
+    } catch {
+      /* ignore */
     }
     let cancelled = false;
     api.apiGetProfile().then(({ data }) => {
