@@ -1,3 +1,7 @@
+// Виджет Почты России (widget.pochta.ru) ожидает глобальный $ — выставляем до всего приложения
+import $ from 'jquery';
+(window as unknown as { $: typeof $; jQuery: typeof $ }).$ = (window as unknown as { jQuery: typeof $ }).jQuery = $;
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

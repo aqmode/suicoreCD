@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "jquery": "^3.7.1",
     "@supabase/supabase-js": "^2.97.0",
     "bcryptjs": "^2.4.3",
     "cdek": "^2.0.0",
