@@ -179,8 +179,15 @@
 .discountBadge {
   font-size: 0.65rem;
   font-weight: 600;
-  color: #c00;
+  color: #0a5c0a;
   letter-spacing: 0.02em;
+}
+
+.buyCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 640px) {

@@ -157,8 +157,14 @@
 .discountBadge {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #c00;
+  color: #0a5c0a;
   letter-spacing: 0.02em;
+}
+
+.purchaseActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .buyButton {

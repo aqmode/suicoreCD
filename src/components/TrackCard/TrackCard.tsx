@@ -114,27 +114,31 @@ export default function TrackCard({
 
       <span className={styles.duration}>{formatDuration(track.durationMs)}</span>
 
-      <button
-        type="button"
-        className={styles.buyBtn}
-        onClick={handleCartClick}
-        disabled={!handleCartClick}
-        data-onboarding={isSummerDelight ? 'track-summer-delight-cart' : undefined}
-      >
-        {inCart
-          ? 'В корзине'
-          : priceRub != null
-            ? getDiscountPercent() > 0
-              ? (
-                  <span className={styles.priceWrap}>
-                    <span className={styles.priceOld}>{formatRub(priceRub)}</span>
-                    <span>{formatRub(getPriceWithDiscount(priceRub))}</span>
-                    <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
-                  </span>
-                )
-              : formatRub(priceRub)
-            : '—'}
-      </button>
+      <div className={styles.buyCell}>
+        <button
+          type="button"
+          className={styles.buyBtn}
+          onClick={handleCartClick}
+          disabled={!handleCartClick}
+          data-onboarding={isSummerDelight ? 'track-summer-delight-cart' : undefined}
+        >
+          {inCart
+            ? 'В корзине'
+            : priceRub != null
+              ? getDiscountPercent() > 0
+                ? (
+                    <span className={styles.priceWrap}>
+                      <span className={styles.priceOld}>{formatRub(priceRub)}</span>
+                      <span>{formatRub(getPriceWithDiscount(priceRub))}</span>
+                    </span>
+                  )
+                : formatRub(priceRub)
+              : '—'}
+        </button>
+        {!inCart && priceRub != null && getDiscountPercent() > 0 && (
+          <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
+        )}
+      </div>
     </div>
   );
 }

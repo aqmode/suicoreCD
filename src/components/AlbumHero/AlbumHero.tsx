@@ -87,19 +87,23 @@ export default function AlbumHero({
                   <span className={styles.priceWrap}>
                     <span className={styles.priceOld}>{formatRub(priceRub)}</span>
                     <span className={styles.price}>{formatRub(getPriceWithDiscount(priceRub))}</span>
-                    <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
                   </span>
                 ) : (
                   <span className={styles.price}>{formatRub(priceRub)}</span>
                 )}
-                <button
-                  type="button"
-                  className={styles.buyButton}
-                  onClick={handleCartClick}
-                  disabled={!handleCartClick}
-                >
-                  {inCart ? 'В корзине' : 'Add to Cart'}
-                </button>
+                <div className={styles.purchaseActions}>
+                  <button
+                    type="button"
+                    className={styles.buyButton}
+                    onClick={handleCartClick}
+                    disabled={!handleCartClick}
+                  >
+                    {inCart ? 'В корзине' : 'Add to Cart'}
+                  </button>
+                  {getDiscountPercent() > 0 && (
+                    <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
+                  )}
+                </div>
               </div>
             </>
           )}
