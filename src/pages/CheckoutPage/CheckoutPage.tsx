@@ -12,6 +12,7 @@ import PochtaWidget, { type PochtaPoint } from "../../components/PochtaWidget/Po
 import styles from "./CheckoutPage.module.css";
 
 const PAYMENT_TIP_COOKIE = "suicore_payment_tip_seen";
+const MAP_TIP_COOKIE = "suicore_map_tip_seen";
 const ONE_RUBLE_DELIVERY = !!(import.meta.env.VITE_PRICE_1RUB_NAME as string)?.trim();
 
 function getPaymentTipSeen(): boolean {
@@ -22,6 +23,19 @@ function getPaymentTipSeen(): boolean {
 function setPaymentTipSeen(): void {
   try {
     document.cookie = `${PAYMENT_TIP_COOKIE}=1; path=/; max-age=31536000; SameSite=Lax`;
+  } catch {
+    /* ignore */
+  }
+}
+
+function getMapTipSeen(): boolean {
+  if (typeof document === "undefined") return true;
+  return document.cookie.split(";").some((s) => s.trim().startsWith(`${MAP_TIP_COOKIE}=`));
+}
+
+function setMapTipSeen(): void {
+  try {
+    document.cookie = `${MAP_TIP_COOKIE}=1; path=/; max-age=31536000; SameSite=Lax`;
   } catch {
     /* ignore */
   }
@@ -39,6 +53,7 @@ export default function CheckoutPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [paymentTipOpen, setPaymentTipOpen] = useState(false);
+  const [mapTipVisible, setMapTipVisible] = useState(false);
 
   const deliveryRub = ONE_RUBLE_DELIVERY
     ? (pochtaPoint ? 1 : 0)
@@ -57,6 +72,10 @@ export default function CheckoutPage() {
 
   const handlePochtaSelect = useCallback((point: PochtaPoint) => {
     setPochtaPoint(point);
+  }, []);
+
+  useEffect(() => {
+    if (!getMapTipSeen()) setMapTipVisible(true);
   }, []);
 
   useEffect(() => {
@@ -200,7 +219,32 @@ export default function CheckoutPage() {
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>Доставка Почтой России</h2>
             <p className={styles.hint}>Выберите отделение на карте</p>
-            <PochtaWidget onSelect={handlePochtaSelect} />
+            <div className={styles.mapWrap}>
+              <PochtaWidget onSelect={handlePochtaSelect} />
+              {mapTipVisible && (
+                <div
+                  className={styles.mapTipOverlay}
+                  role="dialog"
+                  aria-modal="false"
+                  aria-labelledby="map-tip-title"
+                >
+                  <p id="map-tip-title" className={styles.mapTipText}>
+                    Если точки ПВЗ не отображаются на карте, отключите VPN, прокси или блокировщики (например Zapret).
+                  </p>
+                  <button
+                    type="button"
+                    className={styles.mapTipClose}
+                    onClick={() => {
+                      setMapTipSeen();
+                      setMapTipVisible(false);
+                    }}
+                    autoFocus
+                  >
+                    Понятно
+                  </button>
+                </div>
+              )}
+            </div>
             {submitAttempted && !pochtaPoint && (
               <p className={styles.fieldError} role="alert">
                 Выберите отделение Почты России на карте

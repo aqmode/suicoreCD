@@ -29,7 +29,7 @@ Vite проксирует запросы с `/api` (кроме `/api/spotify`) �
 
 1. **На сервере** задайте переменные окружения для процесса API (`.env`, pm2 env, systemd):
    - `DATABASE_URL`, `SUPABASE_JWT_SECRET`, при необходимости `VITE_SUPABASE_URL` / `SUPABASE_URL`, `API_PORT=3001`
-   - **Оплата (ЮKassa):** `YOOKASSA_ID` (или `YOOKASSA_SHOP_ID`), `YOOKASSA_SECRET_KEY` (или `YOOKASSA_SECRET`), `PAYMENT_BASE_URL` (например `https://suicore.space`). В ЛК ЮKassa → Настройки → Уведомления укажите URL: `https://ваш-домен/api/payments/yookassa`, событие `payment.succeeded`.
+   - **Оплата:** переключатель `PAYMENT=YOOKASSA` или `PAYMENT=ROBOKASSA`. Общее: `PAYMENT_BASE_URL` (например `https://suicore.space`). **YOOKASSA:** `YOOKASSA_ID`, `YOOKASSA_SECRET_KEY`; в ЛК ЮKassa → Уведомления: `https://ваш-домен/api/payments/yookassa`, событие `payment.succeeded`. **ROBOKASSA:** в ЛК Result URL: `https://ваш-домен/api/payments/robokassa` (логин/пароли для теста захардкожены в коде; для прода — вынести в .env).
    - **Spotify (иначе «Spotify init failed»):** `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`; при необходимости прокси: `SPOTIFY_PROXY=http://user:pass@host:port` или `PROXY=host:port:user:pass`
 
 2. **Запустите процесс API** (должен работать постоянно):
