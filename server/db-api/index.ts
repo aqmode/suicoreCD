@@ -370,10 +370,11 @@ app.post('/api/payments/create', authMiddleware, async (req, res) => {
     const successUrl = `${ROBOKASSA_SUCCESS_URL}${ROBOKASSA_SUCCESS_URL.includes('?') ? '&' : '?'}order=${encodeURIComponent(orderId)}`;
     const failUrl = `${ROBOKASSA_FAIL_URL}${ROBOKASSA_FAIL_URL.includes('?') ? '&' : '?'}order=${encodeURIComponent(orderId)}`;
     const desc = `Заказ ${orderId}`;
-    // Подпись по доке: MerchantLogin:OutSum:InvId:SuccessUrl2:SuccessUrl2Method:FailUrl2:FailUrl2Method:Пароль#1
+    // Подпись: порядок модификаторов по доке — FailUrl2Method, FailUrl2, SuccessUrl2Method, SuccessUrl2. Методы как в ЛК (POST).
     const successUrlEnc = encodeURIComponent(successUrl);
     const failUrlEnc = encodeURIComponent(failUrl);
-    const sigStr = `${ROBOKASSA_SHOP_ID}:${outSumStr}:${invId}:${successUrlEnc}:GET:${failUrlEnc}:GET:${ROBOKASSA_PASS_1}`;
+    const url2Method = (process.env.ROBOKASSA_URL2_METHOD || 'POST').toUpperCase(); // в ЛК везде POST
+    const sigStr = `${ROBOKASSA_SHOP_ID}:${outSumStr}:${invId}:${url2Method}:${failUrlEnc}:${url2Method}:${successUrlEnc}:${ROBOKASSA_PASS_1}`;
     const signatureValue = robokassaMd5(sigStr);
     const params: Record<string, string> = {
       MerchantLogin: ROBOKASSA_SHOP_ID,
@@ -382,9 +383,9 @@ app.post('/api/payments/create', authMiddleware, async (req, res) => {
       Description: desc,
       SignatureValue: signatureValue,
       SuccessUrl2: successUrl,
-      SuccessUrl2Method: 'GET',
+      SuccessUrl2Method: url2Method,
       FailUrl2: failUrl,
-      FailUrl2Method: 'GET',
+      FailUrl2Method: url2Method,
     };
     if (process.env.ROBOKASSA_IS_TEST === '1') params.IsTest = '1';
     const searchParams = new URLSearchParams(params);
