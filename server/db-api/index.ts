@@ -380,8 +380,9 @@ app.post('/api/payments/create', authMiddleware, async (req, res) => {
       const outSumStr = amount.toFixed(2);
       const successUrl = `${PAYMENT_BASE_URL}/order/success?order=${encodeURIComponent(orderId)}`;
       const failUrl = `${PAYMENT_BASE_URL}/order/fail?order=${encodeURIComponent(orderId)}`;
+      const url2Method = 'POST';
       // Подпись: URL в чистом виде (без URL-кодировки). В запросе — с кодировкой. Порядок: SuccessUrl2, SuccessUrl2Method, FailUrl2, FailUrl2Method (как в примере Робокассы).
-      const sigStr = `${ROBOKASSA_SHOP_ID}:${outSumStr}:${invId}:${successUrl}:POST:${failUrl}:POST:${ROBOKASSA_PASS_1}`;
+      const sigStr = `${ROBOKASSA_SHOP_ID}:${outSumStr}:${invId}:${successUrl}:${url2Method}:${failUrl}:${url2Method}:${ROBOKASSA_PASS_1}`;
       const signatureValue = robokassaMd5(sigStr);
       const params: Record<string, string> = {
         MerchantLogin: ROBOKASSA_SHOP_ID,
