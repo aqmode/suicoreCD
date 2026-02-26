@@ -103,9 +103,12 @@ export default function CheckoutPage() {
         })),
       });
       if (orderErr || !order?.id) throw new Error(orderErr?.message ?? "Ошибка создания заказа");
-      const { data: payment, error: payErr } = await api.apiCreatePayment((order as { id: string }).id, totalWithDelivery);
+      const orderId = (order as { id: string }).id;
+      const { data: payment, error: payErr } = await api.apiCreatePayment(orderId, totalWithDelivery);
       if (payErr || !payment?.payUrl) {
-        window.location.href = "https://suicore.space/order/fail";
+        setSubmitError(
+          payErr?.message ?? "Не удалось перейти к оплате. Заказ создан — можно оплатить его из раздела «Мои заказы»."
+        );
         return;
       }
       window.location.href = payment.payUrl;

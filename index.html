@@ -18,13 +18,8 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- jQuery для виджетов карт (Яндекс/Почта России ожидают $; yandex.st часто недоступен) -->
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-      integrity="sha512-2H5N8G/dO4oOy2QGMYD2XHM0nEm5EdBvA+2Dd2+2bXhR6RGnRzk9iM7nLqmcxYH+F+CQfExkf2bYZ1nGQzLqg=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
+    <!-- jQuery для виджетов карт (Яндекс/Почта России ожидают $). Без integrity — cdnjs может обновить файл. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
