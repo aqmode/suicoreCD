@@ -39,7 +39,7 @@ rsync -avz --exclude node_modules --exclude .git . root@5.42.101.54:/var/www/sui
 - `SUPABASE_JWT_SECRET`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - `API_PORT=3001`
 - `VITE_APP_ORIGIN=https://suicore.space`
-- `ROBOKASSA_*`, `PAYMENT_BASE_URL=https://suicore.space`
+- `YOOKASSA_ID`, `YOOKASSA_SECRET_KEY`, `PAYMENT_BASE_URL=https://suicore.space`
 - Остальные `VITE_*` как в вашем текущем `.env` (цены, ключ Яндекс.Карт и т.д.)
 
 На сервере:

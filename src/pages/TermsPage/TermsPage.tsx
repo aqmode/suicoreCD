@@ -32,7 +32,7 @@ export default function TermsPage() {
 
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>3. Оплата и доставка</h2>
-          <p className={styles.text}>3.1. Оплата осуществляется через платежный сервис Robokassa.</p>
+          <p className={styles.text}>3.1. Оплата осуществляется через платёжный сервис ЮKassa.</p>
           <p className={styles.text}>3.2. Доставка товара осуществляется по РФ силами служб СДЭК или Почта России. Риск случайной гибели товара переходит к Покупателю в момент передачи отправления в службу доставки.</p>
         </section>
 

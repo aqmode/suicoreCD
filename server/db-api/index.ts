@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import crypto from 'crypto';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
@@ -293,145 +292,97 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
   }
 });
 
-// ---------- Payments (Robokassa) ----------
-// Оплата считается выполненной ТОЛЬКО после callback на ResultURL (POST /api/payments/robokassa).
-const ROBOKASSA_SHOP_ID = process.env.ROBOKASSA_SHOP_ID ?? '';
-const ROBOKASSA_PASS_1 = process.env.ROBOKASSA_PASS_1 ?? '';
-const ROBOKASSA_PASS_2 = process.env.ROBOKASSA_PASS_2 ?? '';
-const ROBOKASSA_SUCCESS_URL = process.env.ROBOKASSA_SUCCESS_URL ?? 'https://suicore.space/order/success';
-const ROBOKASSA_FAIL_URL = process.env.ROBOKASSA_FAIL_URL ?? 'https://suicore.space/order/fail';
-const ROBOKASSA_BASE = 'https://auth.robokassa.ru/Merchant/Index.aspx';
+// ---------- Payments (YooKassa / ЮKassa) ----------
+// Оплата: создаём платёж через API ЮKassa, возвращаем payUrl. Статус заказа → paid по webhook.
+const YOOKASSA_SHOP_ID = process.env.YOOKASSA_ID ?? process.env.YOOKASSA_SHOP_ID ?? '';
+const YOOKASSA_SECRET = process.env.YOOKASSA_SECRET_KEY ?? process.env.YOOKASSA_SECRET ?? '';
+const PAYMENT_BASE_URL = (process.env.PAYMENT_BASE_URL ?? 'https://suicore.space').replace(/\/$/, '');
+const YOOKASSA_API = 'https://api.yookassa.ru/v3/payments';
 
-/** Диапазоны IP Робокассы для Result URL (допускаем только их). */
-const ROBOKASSA_IP_RANGES = ['185.59.216.0/24', '5.43.208.0/24', '91.228.148.0/23'];
-
-function ipToIntV4(ip: string): number | null {
-  const parts = ip.trim().split('.');
-  if (parts.length !== 4) return null;
-  let n = 0;
-  for (const p of parts) {
-    const x = parseInt(p, 10);
-    if (Number.isNaN(x) || x < 0 || x > 255) return null;
-    n = (n << 8) | x;
-  }
-  return n >>> 0;
-}
-
-function ipInCidrV4(ipInt: number, cidr: string): boolean {
-  const [netStr, prefixStr] = cidr.split('/');
-  const prefix = parseInt(prefixStr, 10);
-  if (Number.isNaN(prefix) || prefix < 0 || prefix > 32) return false;
-  const netInt = ipToIntV4(netStr);
-  if (netInt === null) return false;
-  const shift = 32 - prefix;
-  return (ipInt >>> shift) === (netInt >>> shift);
-}
-
-function getClientIp(req: express.Request): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) {
-    const first = typeof forwarded === 'string' ? forwarded.split(',')[0] : forwarded[0];
-    if (first) return first.trim();
-  }
-  return req.socket?.remoteAddress ?? req.ip ?? '';
-}
-
-function isRobokassaIp(ip: string): boolean {
-  const trimmed = (ip || '').trim();
-  if (!trimmed || trimmed.includes(':')) return false;
-  const ipInt = ipToIntV4(trimmed);
-  if (ipInt === null) return false;
-  return ROBOKASSA_IP_RANGES.some((cidr) => ipInCidrV4(ipInt, cidr));
-}
-
-function robokassaMd5(str: string): string {
-  return crypto.createHash('md5').update(str, 'utf8').digest('hex').toLowerCase();
+function yookassaAuthHeader(): string {
+  const cred = `${YOOKASSA_SHOP_ID}:${YOOKASSA_SECRET}`;
+  return 'Basic ' + Buffer.from(cred, 'utf8').toString('base64');
 }
 
 app.post('/api/payments/create', authMiddleware, async (req, res) => {
   try {
     const { order_id: orderId, out_sum: outSum } = req.body;
-    if (!orderId || outSum == null || !ROBOKASSA_SHOP_ID || !ROBOKASSA_PASS_1) {
-      return res.status(400).json({ error: 'order_id and out_sum required; Robokassa not configured' });
+    if (!orderId || outSum == null || !YOOKASSA_SHOP_ID || !YOOKASSA_SECRET) {
+      return res.status(400).json({ error: 'order_id and out_sum required; YooKassa not configured' });
     }
     const amount = Number(outSum);
     if (!Number.isFinite(amount) || amount < 0) {
       return res.status(400).json({ error: 'Invalid amount' });
     }
-    const outSumStr = amount.toFixed(2);
-    const orderRow = await pool.query<{ inv_id: number }>('SELECT inv_id FROM public.orders WHERE id = $1', [orderId]);
+    const orderRow = await pool.query('SELECT id, total_rub FROM public.orders WHERE id = $1', [orderId]);
     if (orderRow.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
-    const invId = Number(orderRow.rows[0].inv_id);
-    if (!Number.isFinite(invId)) {
-      return res.status(500).json({ error: 'Order has no inv_id' });
-    }
-    const successUrl = `${ROBOKASSA_SUCCESS_URL}${ROBOKASSA_SUCCESS_URL.includes('?') ? '&' : '?'}order=${encodeURIComponent(orderId)}`;
-    const failUrl = `${ROBOKASSA_FAIL_URL}${ROBOKASSA_FAIL_URL.includes('?') ? '&' : '?'}order=${encodeURIComponent(orderId)}`;
-    const desc = `Заказ ${orderId}`;
-    // Подпись: порядок модификаторов по доке — FailUrl2Method, FailUrl2, SuccessUrl2Method, SuccessUrl2. Методы как в ЛК (POST).
-    const successUrlEnc = encodeURIComponent(successUrl);
-    const failUrlEnc = encodeURIComponent(failUrl);
-    const url2Method = (process.env.ROBOKASSA_URL2_METHOD || 'POST').toUpperCase(); // в ЛК везде POST
-    const sigStr = `${ROBOKASSA_SHOP_ID}:${outSumStr}:${invId}:${url2Method}:${failUrlEnc}:${url2Method}:${successUrlEnc}:${ROBOKASSA_PASS_1}`;
-    const signatureValue = robokassaMd5(sigStr);
-    const params: Record<string, string> = {
-      MerchantLogin: ROBOKASSA_SHOP_ID,
-      OutSum: outSumStr,
-      InvId: String(invId),
-      Description: desc,
-      SignatureValue: signatureValue,
-      SuccessUrl2: successUrl,
-      SuccessUrl2Method: url2Method,
-      FailUrl2: failUrl,
-      FailUrl2Method: url2Method,
+    const returnUrl = `${PAYMENT_BASE_URL}/order/success?order=${encodeURIComponent(orderId)}`;
+    const body = {
+      amount: { value: amount.toFixed(2), currency: 'RUB' },
+      confirmation: { type: 'redirect' as const, return_url: returnUrl },
+      capture: true,
+      description: `Заказ ${orderId}`,
+      metadata: { order_id: orderId },
     };
-    if (process.env.ROBOKASSA_IS_TEST === '1') params.IsTest = '1';
-    const searchParams = new URLSearchParams(params);
-    const payUrl = `${ROBOKASSA_BASE}?${searchParams.toString()}`;
+    const apiRes = await fetch(YOOKASSA_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: yookassaAuthHeader(),
+        'Idempotence-Key': `${orderId}-${Date.now()}`,
+      },
+      body: JSON.stringify(body),
+    });
+    const data = (await apiRes.json()) as {
+      id?: string;
+      status?: string;
+      confirmation?: { confirmation_url?: string };
+      description?: string;
+    };
+    if (!apiRes.ok) {
+      console.error('[YooKassa] Create payment API error', apiRes.status, data);
+      return res.status(502).json({
+        error: (data as { description?: string }).description ?? 'YooKassa error',
+      });
+    }
+    const payUrl = data.confirmation?.confirmation_url;
+    if (!payUrl) {
+      console.error('[YooKassa] No confirmation_url in response', data);
+      return res.status(502).json({ error: 'No payment link from YooKassa' });
+    }
     res.json({ payUrl });
   } catch (e) {
-    console.error('[Robokassa] Create payment exception:', e);
+    console.error('[YooKassa] Create payment exception:', e);
     res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
   }
 });
 
-// ResultURL: Robokassa шлёт сюда POST после успешной оплаты. Доступ только с IP Робокассы.
-app.post('/api/payments/robokassa', express.urlencoded({ extended: true }), async (req, res) => {
-  const clientIp = getClientIp(req);
-  if (!isRobokassaIp(clientIp)) {
-    console.warn('[Robokassa] ResultURL rejected: IP not in whitelist', { ip: clientIp });
-    res.status(403).send('Forbidden');
-    return;
-  }
+// Webhook: ЮKassa шлёт сюда POST при payment.succeeded. В ЛК укажите URL: https://ваш-домен/api/payments/yookassa
+app.post('/api/payments/yookassa', express.json(), async (req, res) => {
+  res.status(200).send('OK');
   try {
-    const OutSum = req.body?.OutSum ?? req.body?.outSum;
-    const InvId = req.body?.InvId ?? req.body?.invId;
-    const SignatureValue = (req.body?.SignatureValue ?? req.body?.signatureValue ?? '').toString().trim();
-    if (OutSum == null || InvId == null || !SignatureValue || !ROBOKASSA_PASS_2) {
-      res.status(400).send('Bad request');
+    const { type, event, object } = req.body ?? {};
+    if (type !== 'notification' || event !== 'payment.succeeded' || !object?.id) {
       return;
     }
-    const sigStr = `${OutSum}:${InvId}:${ROBOKASSA_PASS_2}`;
-    const expectedSig = robokassaMd5(sigStr);
-    const receivedSig = SignatureValue.toLowerCase();
-    if (expectedSig !== receivedSig) {
-      console.warn('[Robokassa] ResultURL: invalid signature', { InvId });
-      res.status(200).send('bad sign');
+    const paymentId = object.id;
+    const status = object.status;
+    const metadata = object.metadata ?? {};
+    const orderId = metadata.order_id;
+    if (status !== 'succeeded' || !orderId) {
       return;
     }
     const r = await pool.query<{ id: string }>(
-      "UPDATE public.orders SET status = 'paid' WHERE inv_id = $1 AND status = 'new' RETURNING id",
-      [InvId]
+      "UPDATE public.orders SET status = 'paid' WHERE id = $1 AND status = 'new' RETURNING id",
+      [orderId]
     );
     if (r.rowCount && r.rowCount > 0) {
-      console.log('[Robokassa] Order marked paid', r.rows[0].id, 'InvId', InvId);
+      console.log('[YooKassa] Order marked paid', r.rows[0].id, 'payment', paymentId);
     }
-    res.status(200).send(`OK${InvId}`);
   } catch (e) {
-    console.error('[Robokassa] ResultURL error:', e);
-    res.status(500).send('error');
+    console.error('[YooKassa] Webhook error:', e);
   }
 });
 

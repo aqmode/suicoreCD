@@ -37,7 +37,7 @@ nginx -t && systemctl reload nginx
 echo "=== Файл .env ==="
 if [ ! -f "$APP_DIR/.env" ]; then
     echo "Создайте .env в $APP_DIR (скопируйте с локальной машины или из env.example)."
-    echo "Минимум: DATABASE_URL, SUPABASE_JWT_SECRET, API_PORT=3001, ROBOKASSA_*, PAYMENT_BASE_URL, VITE_* для сборки."
+    echo "Минимум: DATABASE_URL, SUPABASE_JWT_SECRET, API_PORT=3001, YOOKASSA_ID, YOOKASSA_SECRET_KEY, PAYMENT_BASE_URL, VITE_* для сборки."
     exit 1
 fi
 
