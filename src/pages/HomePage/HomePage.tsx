@@ -10,7 +10,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSpotify } from '../../context/SpotifyContext';
 import { useCart } from '../../context/CartContext';
-import { getPriceRub } from '../../lib/prices';
+import { getPriceRub, getPriceWithDiscount } from '../../lib/prices';
 import { useSectionScroll } from '../../hooks/useSectionScroll';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import AlbumHero from '../../components/AlbumHero/AlbumHero';
@@ -167,10 +167,11 @@ export default function HomePage() {
   }
 
   const priceRub = getPriceRub(release.name, { isFirstInCatalog: currentIndex === 0 });
+  const priceForCart = getPriceWithDiscount(priceRub);
   const handleAddReleaseToCart = () => {
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },
-      priceRub
+      priceForCart
     );
   };
   const handleRemoveReleaseFromCart = () => {
@@ -180,7 +181,7 @@ export default function HomePage() {
   const handleAddTrackToCart = (track: Track) => {
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },
-      priceRub,
+      priceForCart,
       { id: track.id, name: track.name }
     );
   };
