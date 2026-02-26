@@ -163,6 +163,26 @@
   transform: scale(0.96);
 }
 
+.priceWrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.priceOld {
+  font-size: 0.7rem;
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.discountBadge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #c00;
+  letter-spacing: 0.02em;
+}
+
 @media (max-width: 640px) {
   .row {
     gap: 12px;

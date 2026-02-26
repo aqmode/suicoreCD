@@ -33,13 +33,36 @@ export function SpotifyProvider({ children }: { children: ReactNode }) {
   const [trackCache, setTrackCache] = useState<Record<string, Track[]>>({});
 
   useEffect(() => {
+    const TIMEOUT_MS = 10000;
+    let cancelled = false;
+    const timeoutId = setTimeout(() => {
+      if (cancelled) return;
+      setError(
+        'Превышено время ожидания. Проверьте, что API запущен (npm run api), и перезагрузите страницу.'
+      );
+      setLoading(false);
+    }, TIMEOUT_MS);
+
     fetchInitData()
       .then((data) => {
+        if (cancelled) return;
         setArtist(data.artist);
         setReleases(data.releases);
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          clearTimeout(timeoutId);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const getAlbumTracks = useCallback(

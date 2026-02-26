@@ -1,7 +1,7 @@
 import styles from './AlbumHero.module.css';
 import type { Release } from '../../types';
 import ArrowButton from '../ArrowButton/ArrowButton';
-import { formatRub } from '../../lib/prices';
+import { formatRub, getDiscountPercent, getPriceWithDiscount } from '../../lib/prices';
 
 function formatDuration(ms: number): string {
   const m = Math.floor(ms / 60000);
@@ -83,7 +83,15 @@ export default function AlbumHero({
             <>
               <div className={styles.divider} />
               <div className={styles.purchase}>
-                <span className={styles.price}>{formatRub(priceRub)}</span>
+                {getDiscountPercent() > 0 ? (
+                  <span className={styles.priceWrap}>
+                    <span className={styles.priceOld}>{formatRub(priceRub)}</span>
+                    <span className={styles.price}>{formatRub(getPriceWithDiscount(priceRub))}</span>
+                    <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
+                  </span>
+                ) : (
+                  <span className={styles.price}>{formatRub(priceRub)}</span>
+                )}
                 <button
                   type="button"
                   className={styles.buyButton}

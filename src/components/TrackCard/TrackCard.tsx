@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './TrackCard.module.css';
 import type { Track } from '../../types';
-import { formatRub } from '../../lib/prices';
+import { formatRub, getDiscountPercent, getPriceWithDiscount } from '../../lib/prices';
 
 interface Props {
   track: Track;
@@ -121,7 +121,19 @@ export default function TrackCard({
         disabled={!handleCartClick}
         data-onboarding={isSummerDelight ? 'track-summer-delight-cart' : undefined}
       >
-        {inCart ? 'В корзине' : (priceRub != null ? formatRub(priceRub) : '—')}
+        {inCart
+          ? 'В корзине'
+          : priceRub != null
+            ? getDiscountPercent() > 0
+              ? (
+                  <span className={styles.priceWrap}>
+                    <span className={styles.priceOld}>{formatRub(priceRub)}</span>
+                    <span>{formatRub(getPriceWithDiscount(priceRub))}</span>
+                    <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
+                  </span>
+                )
+              : formatRub(priceRub)
+            : '—'}
       </button>
     </div>
   );

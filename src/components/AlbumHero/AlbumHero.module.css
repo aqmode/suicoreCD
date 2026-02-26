@@ -140,6 +140,27 @@
   font-weight: 600;
 }
 
+.priceWrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.priceOld {
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+.discountBadge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #c00;
+  letter-spacing: 0.02em;
+}
+
 .buyButton {
   padding: 14px 32px;
   background: #000;
