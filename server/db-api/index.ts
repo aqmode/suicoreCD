@@ -370,11 +370,12 @@ app.post('/api/payments/create', authMiddleware, async (req, res) => {
     const successUrl = `${ROBOKASSA_SUCCESS_URL}${ROBOKASSA_SUCCESS_URL.includes('?') ? '&' : '?'}order=${encodeURIComponent(orderId)}`;
     const failUrl = `${ROBOKASSA_FAIL_URL}${ROBOKASSA_FAIL_URL.includes('?') ? '&' : '?'}order=${encodeURIComponent(orderId)}`;
     const desc = `Заказ ${orderId}`;
+    // Подпись по доке: MerchantLogin:OutSum:InvId:SuccessUrl2:SuccessUrl2Method:FailUrl2:FailUrl2Method:Пароль#1
     const successUrlEnc = encodeURIComponent(successUrl);
     const failUrlEnc = encodeURIComponent(failUrl);
-    const sigStr = `${ROBOKASSA_SHOP_ID}:${outSumStr}:${invId}:GET:${failUrlEnc}:GET:${successUrlEnc}:${ROBOKASSA_PASS_1}`;
+    const sigStr = `${ROBOKASSA_SHOP_ID}:${outSumStr}:${invId}:${successUrlEnc}:GET:${failUrlEnc}:GET:${ROBOKASSA_PASS_1}`;
     const signatureValue = robokassaMd5(sigStr);
-    const params = new URLSearchParams({
+    const params: Record<string, string> = {
       MerchantLogin: ROBOKASSA_SHOP_ID,
       OutSum: outSumStr,
       InvId: String(invId),
@@ -384,8 +385,10 @@ app.post('/api/payments/create', authMiddleware, async (req, res) => {
       SuccessUrl2Method: 'GET',
       FailUrl2: failUrl,
       FailUrl2Method: 'GET',
-    });
-    const payUrl = `${ROBOKASSA_BASE}?${params.toString()}`;
+    };
+    if (process.env.ROBOKASSA_IS_TEST === '1') params.IsTest = '1';
+    const searchParams = new URLSearchParams(params);
+    const payUrl = `${ROBOKASSA_BASE}?${searchParams.toString()}`;
     res.json({ payUrl });
   } catch (e) {
     console.error('[Robokassa] Create payment exception:', e);
