@@ -66,21 +66,39 @@ export default function PochtaWidget({ onSelect }: Props) {
       if (point) onSelectRef.current(point);
     };
 
-    const script = document.createElement("script");
-    script.src = WIDGET_SCRIPT_URL;
-    script.async = false;
-    script.onload = () => {
-      if (window.ecomStartWidget) {
-        window.ecomStartWidget({
-          id: WIDGET_ID,
-          containerId: CONTAINER_ID,
-          callbackFunction: win.pochtaCallbackFunction!,
-        });
-      }
+    // Виджет тянет jQuery с yandex.st (часто ERR_CONNECTION_CLOSED). Даём свой $ до вставки скрипта.
+    const runWidget = () => {
+      const script = document.createElement("script");
+      script.src = WIDGET_SCRIPT_URL;
+      script.async = false;
+      script.onload = () => {
+        if (window.ecomStartWidget) {
+          window.ecomStartWidget({
+            id: WIDGET_ID,
+            containerId: CONTAINER_ID,
+            callbackFunction: win.pochtaCallbackFunction!,
+          });
+        }
+      };
+      document.body.appendChild(script);
     };
-    document.body.appendChild(script);
+
+    let cancelled = false;
+    if ((win as { $?: unknown }).$ != null) {
+      runWidget();
+    } else {
+      import("jquery").then((mod) => {
+        if (cancelled) return;
+        const $ = mod.default;
+        (win as { $: typeof $; jQuery: typeof $ }).$ = (win as { jQuery: typeof $ }).jQuery = $;
+        runWidget();
+      });
+    }
+
     return () => {
-      script.remove();
+      cancelled = true;
+      const script = document.querySelector(`script[src="${WIDGET_SCRIPT_URL}"]`);
+      if (script) script.remove();
       delete win.pochtaCallbackFunction;
     };
   }, []);
