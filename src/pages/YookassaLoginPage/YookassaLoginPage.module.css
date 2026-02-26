@@ -1,0 +1,47 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.inner {
+  text-align: center;
+  max-width: 360px;
+}
+
+.title {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  margin: 0 0 16px;
+}
+
+.text {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.error {
+  margin: 0 0 16px;
+  color: #c00;
+  font-size: 0.95rem;
+}
+
+.btn {
+  padding: 12px 24px;
+  background: #000;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  text-transform: lowercase;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}

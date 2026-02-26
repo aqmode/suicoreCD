@@ -118,10 +118,10 @@ export async function apiGetOrderStatus(orderId: string) {
 }
 
 // Admin
-export async function apiAdminGetData(admin_password: string) {
+export async function apiAdminGetData(admin_password: string, include_deleted = false) {
   return request<{ users: unknown[]; orders: unknown[] }>('/api/admin/data', {
     method: 'POST',
-    body: JSON.stringify({ admin_password }),
+    body: JSON.stringify({ admin_password, include_deleted }),
     token: null,
   });
 }
@@ -136,6 +136,14 @@ export async function apiAdminUpdateOrderStatus(orderId: string, admin_password:
 
 export async function apiAdminDeleteOrder(orderId: string, admin_password: string) {
   return request<{ ok: boolean }>(`/api/admin/orders/${orderId}/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ admin_password }),
+    token: null,
+  });
+}
+
+export async function apiAdminRestoreOrder(orderId: string, admin_password: string) {
+  return request<{ ok: boolean }>(`/api/admin/orders/${orderId}/restore`, {
     method: 'POST',
     body: JSON.stringify({ admin_password }),
     token: null,

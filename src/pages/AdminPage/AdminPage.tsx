@@ -34,6 +34,7 @@ interface Order {
   total_rub: number;
   status: string;
   created_at: string;
+  deleted_at?: string | null;
   items: OrderItem[];
 }
 
@@ -59,11 +60,15 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [orderSearchId, setOrderSearchId] = useState("");
   const [showUnpaid, setShowUnpaid] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  const loadData = useCallback(async (pwd: string) => {
+  const loadData = useCallback(async (pwd: string, includeDeleted?: boolean) => {
     setLoading(true);
     setError(null);
-    const { data: result, error: err } = await api.apiAdminGetData(pwd);
+    const { data: result, error: err } = await api.apiAdminGetData(
+      pwd,
+      includeDeleted ?? showDeleted
+    );
     setLoading(false);
     if (err) {
       setError(err.message);
@@ -75,21 +80,21 @@ export default function AdminPage() {
     }
     setData(result as AdminData);
     return true;
-  }, []);
+  }, [showDeleted]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
     if (stored) {
-      loadData(stored).then((ok) => {
+      loadData(stored, showDeleted).then((ok) => {
         if (!ok) sessionStorage.removeItem(STORAGE_KEY);
       });
     }
-  }, [loadData]);
+  }, [loadData, showDeleted]);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!password.trim()) return;
-    const ok = await loadData(password.trim());
+    const ok = await loadData(password.trim(), showDeleted);
     if (ok) sessionStorage.setItem(STORAGE_KEY, password.trim());
   };
 
@@ -113,16 +118,16 @@ export default function AdminPage() {
         setError(err.message || "Ошибка смены статуса");
         return;
       }
-      if (ok) await loadData(pwd);
+      if (ok) await loadData(pwd, showDeleted);
     },
-    [data, loadData]
+    [data, loadData, showDeleted]
   );
 
   const handleDeleteOrder = useCallback(
     async (orderId: string) => {
       const pwd = getStoredPassword();
       if (!pwd || !data) return;
-      if (!confirm("Удалить этот заказ? Позиции заказа будут удалены.")) return;
+      if (!confirm("Скрыть заказ из списка? Его можно будет восстановить по чекбоксу «Показать удалённые».")) return;
       setError(null);
       const { data: ok, error: err } = await api.apiAdminDeleteOrder(String(orderId), pwd);
       if (err) {
@@ -135,12 +140,31 @@ export default function AdminPage() {
         return;
       }
       if (ok) {
-        await loadData(pwd);
+        await loadData(pwd, showDeleted);
       } else {
         setError("Не удалось удалить заказ (неверный пароль или нет прав)");
       }
     },
-    [data, loadData]
+    [data, loadData, showDeleted]
+  );
+
+  const handleRestoreOrder = useCallback(
+    async (orderId: string) => {
+      const pwd = getStoredPassword();
+      if (!pwd || !data) return;
+      setError(null);
+      const { data: ok, error: err } = await api.apiAdminRestoreOrder(String(orderId), pwd);
+      if (err) {
+        setError(err.message || "Ошибка при восстановлении");
+        return;
+      }
+      if (ok) {
+        await loadData(pwd, showDeleted);
+      } else {
+        setError("Не удалось восстановить заказ");
+      }
+    },
+    [data, loadData, showDeleted]
   );
 
   if (data === null && !loading) {
@@ -233,6 +257,15 @@ export default function AdminPage() {
               />
               Показать неоплаченные (new)
             </label>
+            <label className={styles.showUnpaidLabel}>
+              <input
+                type="checkbox"
+                checked={showDeleted}
+                onChange={(e) => setShowDeleted(e.target.checked)}
+                className={styles.showUnpaidCheckbox}
+              />
+              Показать удалённые
+            </label>
             <input
               type="text"
               className={styles.searchInput}
@@ -255,24 +288,39 @@ export default function AdminPage() {
                       <span>{new Date(o.created_at).toLocaleString("ru")}</span>
                       <span>{o.customer_name}</span>
                       <span>{formatRub(o.total_rub)}</span>
-                      <select
-                        className={styles.statusSelect}
-                        value={ORDER_STATUSES.some((s) => s.value === o.status) ? o.status : "new"}
-                        onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
-                        aria-label="Статус заказа"
-                      >
-                        {ORDER_STATUSES.map((s) => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        className={styles.deleteBtn}
-                        onClick={() => handleDeleteOrder(o.id)}
-                        title="Удалить заказ"
-                      >
-                        Удалить
-                      </button>
+                      {o.deleted_at ? (
+                        <span className={styles.deletedBadge}>Удалён</span>
+                      ) : (
+                        <select
+                          className={styles.statusSelect}
+                          value={ORDER_STATUSES.some((s) => s.value === o.status) ? o.status : "new"}
+                          onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                          aria-label="Статус заказа"
+                        >
+                          {ORDER_STATUSES.map((s) => (
+                            <option key={s.value} value={s.value}>{s.label}</option>
+                          ))}
+                        </select>
+                      )}
+                      {o.deleted_at ? (
+                        <button
+                          type="button"
+                          className={styles.restoreBtn}
+                          onClick={() => handleRestoreOrder(o.id)}
+                          title="Восстановить заказ"
+                        >
+                          Восстановить
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.deleteBtn}
+                          onClick={() => handleDeleteOrder(o.id)}
+                          title="Удалить заказ"
+                        >
+                          Удалить
+                        </button>
+                      )}
                     </div>
                     {(o.items?.length ?? 0) > 0 && (
                       <ul className={styles.itemsList}>
@@ -321,26 +369,41 @@ export default function AdminPage() {
                     <td className={styles.mono}>{o.pvz_code ?? "—"}</td>
                     <td>{formatRub(o.total_rub)}</td>
                     <td>
-                      <select
-                        className={styles.statusSelect}
-                        value={ORDER_STATUSES.some((s) => s.value === o.status) ? o.status : "new"}
-                        onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
-                        aria-label="Статус заказа"
-                      >
-                        {ORDER_STATUSES.map((s) => (
-                          <option key={s.value} value={s.value}>{s.label}</option>
-                        ))}
-                      </select>
+                      {o.deleted_at ? (
+                        <span className={styles.deletedBadge}>Удалён</span>
+                      ) : (
+                        <select
+                          className={styles.statusSelect}
+                          value={ORDER_STATUSES.some((s) => s.value === o.status) ? o.status : "new"}
+                          onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                          aria-label="Статус заказа"
+                        >
+                          {ORDER_STATUSES.map((s) => (
+                            <option key={s.value} value={s.value}>{s.label}</option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className={styles.deleteBtn}
-                        onClick={() => handleDeleteOrder(o.id)}
-                        title="Удалить заказ"
-                      >
-                        Удалить
-                      </button>
+                      {o.deleted_at ? (
+                        <button
+                          type="button"
+                          className={styles.restoreBtn}
+                          onClick={() => handleRestoreOrder(o.id)}
+                          title="Восстановить заказ"
+                        >
+                          Восстановить
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.deleteBtn}
+                          onClick={() => handleDeleteOrder(o.id)}
+                          title="Удалить заказ"
+                        >
+                          Удалить
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

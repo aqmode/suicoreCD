@@ -15,6 +15,7 @@ import AdminPage from './pages/AdminPage/AdminPage';
 import AuthRequiredPage, { getBrowseWithoutAuth } from './pages/AuthRequiredPage/AuthRequiredPage';
 import OrderSuccessPage from './pages/OrderSuccessPage/OrderSuccessPage';
 import OrderFailPage from './pages/OrderFailPage/OrderFailPage';
+import YookassaLoginPage from './pages/YookassaLoginPage/YookassaLoginPage';
 import OfferPage from './pages/OfferPage/OfferPage';
 import TermsPage from './pages/TermsPage/TermsPage';
 import Footer from './components/Footer/Footer';
@@ -51,6 +52,7 @@ function App() {
     browseWithoutAuth ||
     pathname === AUTH_REDIRECT_PATH ||
     pathname === '/admin' ||
+    pathname === '/yookassa' ||
     pathname === '/order/success' ||
     pathname === '/order/fail' ||
     pathname === '/offer' ||
@@ -83,6 +85,7 @@ function App() {
         <Route path="/order/fail" element={<OrderFailPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path={AUTH_REDIRECT_PATH} element={<GoogleRedirectPage />} />
+        <Route path="/yookassa" element={<YookassaLoginPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/offer" element={<OfferPage />} />
         <Route path="/terms" element={<TermsPage />} />

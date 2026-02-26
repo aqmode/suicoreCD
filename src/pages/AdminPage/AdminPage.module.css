@@ -259,6 +259,27 @@
   background: rgba(200, 0, 0, 0.08);
 }
 
+.deletedBadge {
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
+}
+
+.restoreBtn {
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  color: #0a5c0a;
+  background: transparent;
+  border: 1px solid rgba(10, 92, 10, 0.4);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.restoreBtn:hover {
+  background: rgba(10, 92, 10, 0.08);
+}
+
 .statusSelect {
   min-width: 140px;
   padding: 6px 10px;
