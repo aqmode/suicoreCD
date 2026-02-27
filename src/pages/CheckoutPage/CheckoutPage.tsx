@@ -14,6 +14,8 @@ import styles from "./CheckoutPage.module.css";
 const PAYMENT_TIP_COOKIE = "suicore_payment_tip_seen";
 const MAP_TIP_COOKIE = "suicore_map_tip_seen";
 const ONE_RUBLE_DELIVERY = !!(import.meta.env.VITE_PRICE_1RUB_NAME as string)?.trim();
+const ABROAD_DELIVERY_RUB = 1525;
+const RF_DELIVERY_SURCHARGE_RUB = 100;
 
 function getPaymentTipSeen(): boolean {
   if (typeof document === "undefined") return true;
@@ -49,30 +51,55 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   const [agreePersonalData, setAgreePersonalData] = useState(false);
   const [pochtaPoint, setPochtaPoint] = useState<PochtaPoint | null>(null);
+  const [abroadCountry, setAbroadCountry] = useState<string | null>(null);
+  const [abroadOpen, setAbroadOpen] = useState(false);
+  const [abroadSearch, setAbroadSearch] = useState("");
+  const [countries, setCountries] = useState<{ id: number; name: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [paymentTipOpen, setPaymentTipOpen] = useState(false);
+  const [abroadConfirmOpen, setAbroadConfirmOpen] = useState(false);
+  const [abroadConfirmSeen, setAbroadConfirmSeen] = useState(false);
   const [mapTipVisible, setMapTipVisible] = useState(false);
 
-  const deliveryRub = ONE_RUBLE_DELIVERY
-    ? (pochtaPoint ? 1 : 0)
-    : (pochtaPoint ? pochtaPoint.delivery_rub : 0);
+  const deliveryRub = abroadCountry
+    ? ABROAD_DELIVERY_RUB
+    : ONE_RUBLE_DELIVERY
+      ? (pochtaPoint ? 1 + RF_DELIVERY_SURCHARGE_RUB : 0)
+      : pochtaPoint
+        ? pochtaPoint.delivery_rub + RF_DELIVERY_SURCHARGE_RUB
+        : 0;
   const totalWithDelivery = totalRub + deliveryRub;
 
   const fullNameValid = isValidFullName(fullName);
   const fullNameErr = fullName.trim() ? fullNameError(fullName) : null;
   const phoneValid = !!phone && isValidPhoneNumber(phone);
+  const hasDelivery = !!(pochtaPoint || abroadCountry);
   const canSubmit =
     items.length > 0 &&
     fullNameValid &&
     phoneValid &&
     agreePersonalData &&
-    !!pochtaPoint;
+    hasDelivery;
 
   const handlePochtaSelect = useCallback((point: PochtaPoint) => {
     setPochtaPoint(point);
+    setAbroadCountry(null);
   }, []);
+
+  const handleAbroadCountrySelect = useCallback((name: string) => {
+    setAbroadCountry(name);
+    setPochtaPoint(null);
+  }, []);
+
+  useEffect(() => {
+    if (!abroadOpen || countries.length > 0) return;
+    fetch("/countries.json")
+      .then((r) => r.json())
+      .then(setCountries)
+      .catch(() => setCountries([]));
+  }, [abroadOpen, countries.length]);
 
   useEffect(() => {
     if (!getMapTipSeen()) setMapTipVisible(true);
@@ -88,12 +115,7 @@ export default function CheckoutPage() {
     loadProfile();
   }, [user]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (items.length === 0) return;
-    if (!user) return;
-    setSubmitAttempted(true);
-    if (!canSubmit) return;
+  const doPayment = useCallback(async () => {
     if (!getPaymentTipSeen()) {
       setPaymentTipSeen();
       setPaymentTipOpen(true);
@@ -106,7 +128,7 @@ export default function CheckoutPage() {
         customer_name: fullName.trim(),
         customer_phone: phone,
         customer_email: email.trim(),
-        delivery_address: pochtaPoint?.address ?? null,
+        delivery_address: abroadCountry ?? pochtaPoint?.address ?? null,
         pvz_code: pochtaPoint?.pvz_code ?? null,
         pvz_name: pochtaPoint?.pvz_name ?? null,
         total_rub: totalWithDelivery,
@@ -131,12 +153,32 @@ export default function CheckoutPage() {
         return;
       }
       window.location.href = payment.payUrl;
-      return;
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : "Ошибка оформления");
     } finally {
       setSubmitting(false);
     }
+  }, [
+    fullName,
+    phone,
+    email,
+    abroadCountry,
+    pochtaPoint,
+    totalWithDelivery,
+    items,
+  ]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (items.length === 0) return;
+    if (!user) return;
+    setSubmitAttempted(true);
+    if (!canSubmit) return;
+    if (abroadCountry && !abroadConfirmSeen) {
+      setAbroadConfirmOpen(true);
+      return;
+    }
+    await doPayment();
   };
 
   return (
@@ -245,9 +287,9 @@ export default function CheckoutPage() {
                 </div>
               )}
             </div>
-            {submitAttempted && !pochtaPoint && (
+            {submitAttempted && !hasDelivery && (
               <p className={styles.fieldError} role="alert">
-                Выберите отделение Почты России на карте
+                Выберите отделение на карте или страну доставки ниже
               </p>
             )}
             {pochtaPoint && (
@@ -266,6 +308,52 @@ export default function CheckoutPage() {
                 </div>
               </div>
             )}
+
+            <div className={styles.abroadWrap}>
+              <button
+                type="button"
+                className={`${styles.abroadToggle} ${abroadOpen ? styles.abroadToggleOpen : ''}`}
+                onClick={() => setAbroadOpen((o) => !o)}
+                aria-expanded={abroadOpen}
+              >
+                <span className={styles.abroadToggleText}>Я не из РФ</span>
+                <span className={styles.abroadToggleIcon} aria-hidden>▼</span>
+              </button>
+              {abroadOpen && (
+                <div className={styles.abroadPanel}>
+                  <input
+                    type="text"
+                    className={styles.abroadSearch}
+                    placeholder="Поиск страны..."
+                    value={abroadSearch}
+                    onChange={(e) => setAbroadSearch(e.target.value)}
+                    aria-label="Поиск страны"
+                  />
+                  <ul className={styles.abroadList} role="listbox">
+                    {countries
+                      .filter((c) =>
+                        c.name.toLowerCase().includes(abroadSearch.trim().toLowerCase())
+                      )
+                      .map((c) => (
+                        <li
+                          key={c.id}
+                          role="option"
+                          aria-selected={abroadCountry === c.name}
+                          className={`${styles.abroadItem} ${abroadCountry === c.name ? styles.abroadItemSelected : ''}`}
+                          onClick={() => handleAbroadCountrySelect(c.name)}
+                        >
+                          {c.name}
+                        </li>
+                      ))}
+                  </ul>
+                  {abroadCountry && (
+                    <p className={styles.abroadSelected}>
+                      Доставка в {abroadCountry}: {formatRub(ABROAD_DELIVERY_RUB)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className={styles.totals}>
@@ -329,6 +417,46 @@ export default function CheckoutPage() {
           )}
         </form>
       </div>
+
+      {abroadConfirmOpen && (
+        <div
+          className={styles.tipOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="abroad-confirm-title"
+        >
+          <div className={styles.tipModal} onClick={(ev) => ev.stopPropagation()}>
+            <h2 id="abroad-confirm-title" className={styles.tipTitle}>
+              Доставка за рубеж
+            </h2>
+            <p className={styles.tipText}>
+              Свяжитесь с администратором сайта для доставки посылки.
+            </p>
+            <p className={styles.tipText}>
+              <a
+                href="https://t.me/suicoree"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.abroadConfirmLink}
+              >
+                t.me/suicoree
+              </a>
+            </p>
+            <button
+              type="button"
+              className={styles.tipClose}
+              onClick={() => {
+                setAbroadConfirmOpen(false);
+                setAbroadConfirmSeen(true);
+                doPayment();
+              }}
+              autoFocus
+            >
+              Хорошо
+            </button>
+          </div>
+        </div>
+      )}
 
       {paymentTipOpen && (
         <div

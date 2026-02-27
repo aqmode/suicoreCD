@@ -1,0 +1,31 @@
+[
+  {
+    "id": 895,
+    "name": "Абхазия",
+    "price": null,
+    "error": "Navigation timeout of 20000 ms exceeded"
+  },
+  {
+    "id": 36,
+    "name": "Австралия",
+    "price": null
+  },
+  {
+    "id": 40,
+    "name": "Австрия",
+    "price": null,
+    "error": "Navigation timeout of 20000 ms exceeded"
+  },
+  {
+    "id": 31,
+    "name": "Азербайджан",
+    "price": null,
+    "error": "Navigation timeout of 20000 ms exceeded"
+  },
+  {
+    "id": 8,
+    "name": "Албания",
+    "price": null,
+    "error": "Navigation timeout of 20000 ms exceeded"
+  }
+]
