@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './TrackCard.module.css';
 import type { Track } from '../../types';
 import { formatRub, getDiscountPercent, getPriceWithDiscount } from '../../lib/prices';
+import { usePersonalDiscount } from '../../context/PersonalDiscountContext';
 
 interface Props {
   track: Track;
@@ -41,6 +42,8 @@ export default function TrackCard({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canPreview = Boolean(track.previewUrl);
   const isActive = previewPlayingId === track.id;
+  const { percent: personalPct } = usePersonalDiscount();
+  const discountPct = getDiscountPercent(personalPct);
 
   useEffect(() => {
     if (previewPlayingId !== null && previewPlayingId !== track.id && audioRef.current) {
@@ -125,18 +128,18 @@ export default function TrackCard({
           {inCart
             ? 'В корзине'
             : priceRub != null
-              ? getDiscountPercent() > 0
+              ? discountPct > 0
                 ? (
                     <span className={styles.priceWrap}>
                       <span className={styles.priceOld}>{formatRub(priceRub)}</span>
-                      <span>{formatRub(getPriceWithDiscount(priceRub))}</span>
+                      <span>{formatRub(getPriceWithDiscount(priceRub, personalPct))}</span>
                     </span>
                   )
                 : formatRub(priceRub)
               : '—'}
         </button>
-        {!inCart && priceRub != null && getDiscountPercent() > 0 && (
-          <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
+        {!inCart && priceRub != null && discountPct > 0 && (
+          <span className={styles.discountBadge}>−{discountPct}%</span>
         )}
       </div>
     </div>

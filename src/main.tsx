@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { SpotifyProvider } from './context/SpotifyContext';
 import { AuthProvider } from './context/AuthContext';
+import { PersonalDiscountProvider } from './context/PersonalDiscountContext';
 import { CartProvider } from './context/CartContext';
 import App from './App';
 import './index.css';
@@ -16,9 +17,11 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <SpotifyProvider>
         <AuthProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
+          <PersonalDiscountProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </PersonalDiscountProvider>
         </AuthProvider>
       </SpotifyProvider>
     </BrowserRouter>

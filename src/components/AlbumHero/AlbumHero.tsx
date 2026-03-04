@@ -2,6 +2,7 @@ import styles from './AlbumHero.module.css';
 import type { Release } from '../../types';
 import ArrowButton from '../ArrowButton/ArrowButton';
 import { formatRub, getDiscountPercent, getPriceWithDiscount } from '../../lib/prices';
+import { usePersonalDiscount } from '../../context/PersonalDiscountContext';
 
 function formatDuration(ms: number): string {
   const m = Math.floor(ms / 60000);
@@ -42,6 +43,8 @@ export default function AlbumHero({
   const handleCartClick = inCart ? onRemoveFromCart : onAddToCart;
   const showPurchase = priceRub != null && (onAddToCart || onRemoveFromCart);
   const showSingleDetails = isSingle && singleTrackDurationMs != null;
+  const { percent: personalPct } = usePersonalDiscount();
+  const discountPct = getDiscountPercent(personalPct);
 
   return (
     <div className={styles.hero}>
@@ -83,10 +86,10 @@ export default function AlbumHero({
             <>
               <div className={styles.divider} />
               <div className={styles.purchase}>
-                {getDiscountPercent() > 0 ? (
+                {discountPct > 0 ? (
                   <span className={styles.priceWrap}>
                     <span className={styles.priceOld}>{formatRub(priceRub)}</span>
-                    <span className={styles.price}>{formatRub(getPriceWithDiscount(priceRub))}</span>
+                    <span className={styles.price}>{formatRub(getPriceWithDiscount(priceRub, personalPct))}</span>
                   </span>
                 ) : (
                   <span className={styles.price}>{formatRub(priceRub)}</span>
@@ -100,8 +103,8 @@ export default function AlbumHero({
                   >
                     {inCart ? 'В корзине' : 'Add to Cart'}
                   </button>
-                  {getDiscountPercent() > 0 && (
-                    <span className={styles.discountBadge}>−{getDiscountPercent()}%</span>
+                  {discountPct > 0 && (
+                    <span className={styles.discountBadge}>−{discountPct}%</span>
                   )}
                 </div>
               </div>

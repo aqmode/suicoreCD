@@ -12,6 +12,61 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ---------- Personal Discount (in-memory, parsed from PERSONAL_DISCOUNT env) ----------
+// Format: PERSONAL_DISCOUNT=id8chars1-N1,id8chars2-N2;PERCENT
+// Example: PERSONAL_DISCOUNT=abcd1234-1,efgh5678-3;30
+//   abcd1234 — first 8 chars of user id, 1 — number of paid orders with discount
+//   30 — discount percent
+interface PersonalDiscountEntry { remaining: number }
+const personalDiscountMap = new Map<string, PersonalDiscountEntry>();
+let personalDiscountPercent = 0;
+
+function parsePersonalDiscount(): void {
+  const raw = (process.env.PERSONAL_DISCOUNT ?? '').trim();
+  if (!raw) return;
+  // users_part;percent
+  const semiIdx = raw.lastIndexOf(';');
+  if (semiIdx < 0) return;
+  const usersPart = raw.slice(0, semiIdx).trim();
+  const pctPart = raw.slice(semiIdx + 1).trim();
+  const pct = Number(pctPart);
+  if (!Number.isFinite(pct) || pct <= 0 || pct >= 100) return;
+  personalDiscountPercent = Math.round(pct);
+  for (const entry of usersPart.split(',')) {
+    const t = entry.trim();
+    if (!t) continue;
+    const dashIdx = t.lastIndexOf('-');
+    if (dashIdx < 0) continue;
+    const idPrefix = t.slice(0, dashIdx).trim().toLowerCase();
+    const remaining = Number(t.slice(dashIdx + 1).trim());
+    if (!idPrefix || !Number.isFinite(remaining) || remaining < 1) continue;
+    personalDiscountMap.set(idPrefix, { remaining });
+  }
+  if (personalDiscountMap.size > 0) {
+    console.log(`[PersonalDiscount] Loaded ${personalDiscountMap.size} user(s), ${personalDiscountPercent}%`);
+  }
+}
+parsePersonalDiscount();
+
+/** Check if user has personal discount by matching first 8 chars of their id */
+function getPersonalDiscountForUser(userId: string): { percent: number; remaining: number } | null {
+  if (!userId || personalDiscountPercent <= 0) return null;
+  const prefix = userId.slice(0, 8).toLowerCase();
+  const entry = personalDiscountMap.get(prefix);
+  if (!entry || entry.remaining <= 0) return null;
+  return { percent: personalDiscountPercent, remaining: entry.remaining };
+}
+
+/** Decrement remaining personal-discount purchases for a user (called after successful payment) */
+function decrementPersonalDiscount(userId: string): void {
+  if (!userId || personalDiscountPercent <= 0) return;
+  const prefix = userId.slice(0, 8).toLowerCase();
+  const entry = personalDiscountMap.get(prefix);
+  if (!entry || entry.remaining <= 0) return;
+  entry.remaining -= 1;
+  console.log(`[PersonalDiscount] User ${prefix}* remaining: ${entry.remaining}`);
+}
+
 // Spotify (artist/albums/tracks) — в dev обрабатывает Vite, в проде — здесь
 app.use('/api/spotify', createSpotifyMiddleware(process.env as Record<string, string>));
 
@@ -22,6 +77,18 @@ app.get('/api/health', async (_req, res) => {
     res.json({ ok: true });
   } catch (e) {
     res.status(503).json({ ok: false, error: e instanceof Error ? e.message : 'DB' });
+  }
+});
+
+// ---------- Personal discount for authenticated user ----------
+app.get('/api/personal-discount', authMiddleware, async (req, res) => {
+  try {
+    const { id } = reqUser(req);
+    const d = getPersonalDiscountForUser(id);
+    if (!d) return res.json({ active: false, percent: 0, remaining: 0 });
+    res.json({ active: true, percent: d.percent, remaining: d.remaining });
+  } catch (e) {
+    res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
   }
 });
 
@@ -454,12 +521,13 @@ app.post('/api/payments/yookassa', express.json(), async (req, res) => {
     const metadata = object.metadata ?? {};
     const orderId = metadata.order_id;
     if (object.status !== 'succeeded' || !orderId) return;
-    const r = await pool.query<{ id: string }>(
-      "UPDATE public.orders SET status = 'paid' WHERE id = $1 AND status = 'new' RETURNING id",
+    const r = await pool.query<{ id: string; user_id: string }>(
+      "UPDATE public.orders SET status = 'paid' WHERE id = $1 AND status = 'new' RETURNING id, user_id",
       [orderId]
     );
     if (r.rowCount && r.rowCount > 0) {
       console.log('[YooKassa] Order marked paid', r.rows[0].id);
+      decrementPersonalDiscount(r.rows[0].user_id);
     }
   } catch (e) {
     console.error('[YooKassa] Webhook error:', e);
@@ -490,12 +558,13 @@ app.post('/api/payments/robokassa', express.urlencoded({ extended: true }), asyn
       res.status(200).send('bad sign');
       return;
     }
-    const r = await pool.query<{ id: string }>(
-      "UPDATE public.orders SET status = 'paid' WHERE inv_id = $1 AND status = 'new' RETURNING id",
+    const r = await pool.query<{ id: string; user_id: string }>(
+      "UPDATE public.orders SET status = 'paid' WHERE inv_id = $1 AND status = 'new' RETURNING id, user_id",
       [InvId]
     );
     if (r.rowCount && r.rowCount > 0) {
       console.log('[Robokassa] Order marked paid', r.rows[0].id, 'InvId', InvId);
+      decrementPersonalDiscount(r.rows[0].user_id);
     }
     res.status(200).send(`OK${InvId}`);
   } catch (e) {

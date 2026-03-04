@@ -11,6 +11,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSpotify } from '../../context/SpotifyContext';
 import { useCart } from '../../context/CartContext';
 import { getPriceRub, getPriceWithDiscount } from '../../lib/prices';
+import { usePersonalDiscount } from '../../context/PersonalDiscountContext';
 import { useSectionScroll } from '../../hooks/useSectionScroll';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import AlbumHero from '../../components/AlbumHero/AlbumHero';
@@ -71,6 +72,7 @@ export default function HomePage() {
   const { releases, loading, error, getAlbumTracks } = useSpotify();
   const { addItem, removeItem, items } = useCart();
   const isMobile = useIsMobile();
+  const { percent: personalPct } = usePersonalDiscount();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -167,7 +169,7 @@ export default function HomePage() {
   }
 
   const priceRub = getPriceRub(release.name, { isFirstInCatalog: currentIndex === 0 });
-  const priceForCart = getPriceWithDiscount(priceRub);
+  const priceForCart = getPriceWithDiscount(priceRub, personalPct);
   const handleAddReleaseToCart = () => {
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },

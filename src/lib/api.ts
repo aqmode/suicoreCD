@@ -42,6 +42,11 @@ export async function apiGetProfile() {
   return request<Record<string, unknown>>('/api/profile');
 }
 
+// Personal discount
+export async function apiGetPersonalDiscount() {
+  return request<{ active: boolean; percent: number; remaining: number }>('/api/personal-discount');
+}
+
 export async function apiUpdateProfile(body: {
   full_name?: string | null;
   phone?: string | null;
