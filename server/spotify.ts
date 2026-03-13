@@ -29,7 +29,17 @@ async function getAccessToken(
 
   const res = await proxyFetch('https://accounts.spotify.com/api/token', opts);
 
-  const data = (await res.json()) as { access_token: string; expires_in: number };
+  const text = await res.text();
+  let data: { access_token: string; expires_in: number };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    const preview = text.slice(0, 120).replace(/\n/g, ' ');
+    throw new Error(`Spotify token endpoint returned non-JSON (status ${res.status}): "${preview}…" — check proxy settings`);
+  }
+  if (!res.ok || !data.access_token) {
+    throw new Error(`Spotify token error ${res.status}: ${text.slice(0, 200)}`);
+  }
   cached = {
     token: data.access_token,
     expiresAt: Date.now() + (data.expires_in - 120) * 1000,
@@ -48,7 +58,14 @@ async function spotifyGet(
   if (dispatcher) opts.dispatcher = dispatcher;
 
   const res = await proxyFetch(`https://api.spotify.com/v1${path}`, opts);
-  const data = (await res.json()) as Record<string, unknown> & { error?: { status: number; message: string } };
+  const text = await res.text();
+  let data: Record<string, unknown> & { error?: { status: number; message: string } };
+  try {
+    data = JSON.parse(text);
+  } catch {
+    const preview = text.slice(0, 120).replace(/\n/g, ' ');
+    throw new Error(`Spotify API returned non-JSON (status ${res.status}): "${preview}…" — check proxy settings`);
+  }
   if (!res.ok || data.error) {
     const msg = data.error?.message || `Spotify API ${res.status}`;
     throw new Error(msg);
@@ -121,7 +138,20 @@ export function createSpotifyMiddleware(env: Record<string, string>): (req: Inco
     const safe = proxyUrl.replace(/:([^:@]+)@/, ':***@');
     console.log('[Spotify] Using proxy:', safe);
   }
-  const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
+
+  let dispatcher: ProxyAgent | undefined;
+  if (proxyUrl) {
+    try {
+      const parsed = new URL(proxyUrl);
+      const token = Buffer.from(`${decodeURIComponent(parsed.username)}:${decodeURIComponent(parsed.password)}`).toString('base64');
+      dispatcher = new ProxyAgent({
+        uri: `${parsed.protocol}//${parsed.host}`,
+        token: `Basic ${token}`,
+      });
+    } catch {
+      dispatcher = new ProxyAgent(proxyUrl);
+    }
+  }
 
   return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const url = req.url || '';
