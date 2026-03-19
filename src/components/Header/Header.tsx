@@ -112,6 +112,9 @@ const Header = () => {
           <NavLink to="/" className={styles.logo} onClick={closeMenu}>
             suicore
           </NavLink>
+        </div>
+        <nav className={styles.nav}>
+          {navContent}
           <button
             type="button"
             className={styles.themeToggle}
@@ -121,8 +124,7 @@ const Header = () => {
           >
             <span className={theme === 'dark' ? styles.sunIcon : styles.moonIcon} />
           </button>
-        </div>
-        <nav className={styles.nav}>{navContent}</nav>
+        </nav>
         <button
           type="button"
           className={styles.menuToggle}
@@ -217,6 +219,16 @@ const Header = () => {
               login
             </button>
           )}
+          <button
+            type="button"
+            className={styles.dropdownLink}
+            onClick={() => {
+              toggleTheme();
+              closeMenu();
+            }}
+          >
+            {theme === 'dark' ? '☀ light mode' : '☾ dark mode'}
+          </button>
         </div>
       )}
     </header>

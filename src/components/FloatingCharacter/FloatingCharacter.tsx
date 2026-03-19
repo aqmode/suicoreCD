@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './FloatingCharacter.module.css';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function FloatingCharacter() {
+  const { theme } = useTheme();
   const [useHoverImage, setUseHoverImage] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +24,8 @@ export default function FloatingCharacter() {
     window.addEventListener('mousemove', handleMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleMove);
   }, []);
+
+  if (theme === 'dark') return null;
 
   return (
     <div ref={wrapperRef} className={styles.wrapper}>

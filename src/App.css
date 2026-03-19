@@ -53,3 +53,7 @@
     display: block;
   }
 }
+
+[data-theme="dark"] .app-mobile-float {
+  display: none !important;
+}
