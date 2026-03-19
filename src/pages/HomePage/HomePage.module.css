@@ -63,38 +63,68 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  margin: 24px 0 0;
-  padding-top: 16px;
+  gap: 24px;
+  margin: 28px 0 0;
+  padding-top: 20px;
 }
 
 .buyButton {
-  padding: 12px 32px;
-  border: none;
-  border-radius: 100px;
-  background: #111;
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 600;
+  padding: 14px 32px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  border: 1.5px solid var(--btn-bg);
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.15s ease;
 }
 
 .buyButton:hover {
-  opacity: 0.85;
-  transform: scale(1.03);
+  background: var(--btn-hover-bg);
+  color: var(--btn-hover-text);
+}
+
+.buyButton:active {
+  transform: scale(0.97);
 }
 
 .albumCartPrice {
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  opacity: 0.7;
+}
+
+.albumCartPriceGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.albumDiscountBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  letter-spacing: 0.02em;
+}
+
+.albumPriceOld {
+  font-size: 1rem;
+  font-weight: 400;
+  opacity: 0.4;
+  text-decoration: line-through;
 }
 
 .trackList {
   width: 100%;
   max-width: 680px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .trackLoading {

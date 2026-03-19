@@ -4,19 +4,22 @@ import { BrowserRouter } from 'react-router-dom';
 import { SpotifyProvider } from './context/SpotifyContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { ThemeProvider } from './context/ThemeContext';
 import App from './App';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <SpotifyProvider>
-        <AuthProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
-        </AuthProvider>
-      </SpotifyProvider>
+      <ThemeProvider>
+        <SpotifyProvider>
+          <AuthProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </AuthProvider>
+        </SpotifyProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </StrictMode>
 );

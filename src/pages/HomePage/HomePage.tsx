@@ -10,7 +10,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSpotify } from '../../context/SpotifyContext';
 import { useCart } from '../../context/CartContext';
-import { getPriceRub, formatRub } from '../../lib/prices';
+import { getPriceRub, getOriginalPriceRub, getDiscountPercent, formatRub } from '../../lib/prices';
 import { useSectionScroll } from '../../hooks/useSectionScroll';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import AlbumHero from '../../components/AlbumHero/AlbumHero';
@@ -18,6 +18,7 @@ import TrackCard from '../../components/TrackCard/TrackCard';
 import CDCard from '../../components/CDCard/CDCard';
 import ArrowButton from '../../components/ArrowButton/ArrowButton';
 import SiteFooterContent from '../../components/SiteFooterContent/SiteFooterContent';
+import CartParticles, { useCartParticles } from '../../components/CartParticles/CartParticles';
 import sStyles from '../../components/SectionScroll/SectionScroll.module.css';
 import type { Track } from '../../types';
 import styles from './HomePage.module.css';
@@ -71,6 +72,7 @@ export default function HomePage() {
   const { releases, loading, error, getAlbumTracks } = useSpotify();
   const { addItem, removeItem, items } = useCart();
   const isMobile = useIsMobile();
+  const { bursts, triggerFromEvent } = useCartParticles();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -165,8 +167,11 @@ export default function HomePage() {
   }
 
   const priceRub = getPriceRub(release.name, { isFirstInCatalog: currentIndex === 0 });
+  const originalPrice = getOriginalPriceRub(release.name, { isFirstInCatalog: currentIndex === 0 });
+  const discount = getDiscountPercent();
   // Добавить релиз в корзину (альбом целиком или сингл — без track)
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent) => {
+    if (e) triggerFromEvent(e);
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },
       priceRub
@@ -213,6 +218,8 @@ export default function HomePage() {
         onRemoveFromCart={handleRemoveFromCart}
         inCart={inCart}
         priceRub={priceRub}
+        originalPriceRub={originalPrice}
+        discountPercent={discount}
       />
     </div>
   );
@@ -249,14 +256,22 @@ export default function HomePage() {
             ))}
           </div>
           <div className={styles.albumCartWrap}>
+            <div className={styles.albumCartPriceGroup}>
+              {discount > 0 && originalPrice !== priceRub && (
+                <>
+                  <span className={styles.albumDiscountBadge}>−{discount}%</span>
+                  <span className={styles.albumPriceOld}>{formatRub(originalPrice)}</span>
+                </>
+              )}
+              <span className={styles.albumCartPrice}>{formatRub(priceRub)}</span>
+            </div>
             <button
               type="button"
               className={styles.buyButton}
               onClick={inCart ? handleRemoveFromCart : handleAddToCart}
             >
-              {inCart ? 'В корзине ✓' : 'Добавить альбом в корзину'}
+              {inCart ? 'В корзине' : 'Add to Cart'}
             </button>
-            <span className={styles.albumCartPrice}>{formatRub(priceRub)}</span>
           </div>
           {!isMobile && (
             <div className={styles.diskWrap}>
@@ -295,27 +310,36 @@ export default function HomePage() {
 
   if (isMobile) {
     return (
-      <div ref={mobileScrollRef} className={styles.mobileScroll} key={release?.id}>
-        <div className={styles.mobileSection}>{heroSection}</div>
-        {trackSection && (
-          <div className={styles.mobileSection}>{trackSection}</div>
-        )}
-      </div>
+      <>
+        <CartParticles bursts={bursts} />
+        <div ref={mobileScrollRef} className={styles.mobileScroll} key={release?.id}>
+          <div className={styles.mobileSection}>{heroSection}</div>
+          {trackSection && (
+            <div className={styles.mobileSection}>{trackSection}</div>
+          )}
+        </div>
+      </>
     );
   }
 
   /* Сингл на ПК: контент в потоке, страница скроллится до футера */
   if (!isAlbum) {
     return (
-      <div className={styles.singleDesktopWrap} key={release?.id}>
-        {heroSection}
-      </div>
+      <>
+        <CartParticles bursts={bursts} />
+        <div className={styles.singleDesktopWrap} key={release?.id}>
+          {heroSection}
+        </div>
+      </>
     );
   }
 
   return (
-    <SectionScrollWithRef ref={scrollRef} key={release?.id}>
-      {sections}
-    </SectionScrollWithRef>
+    <>
+      <CartParticles bursts={bursts} />
+      <SectionScrollWithRef ref={scrollRef} key={release?.id}>
+        {sections}
+      </SectionScrollWithRef>
+    </>
   );
 }

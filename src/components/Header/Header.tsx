@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useTheme } from '../../context/ThemeContext';
 import styles from './Header.module.css';
 
 const Header = () => {
   const { user, signInWithGoogle, signOut } = useAuth();
   const { items } = useCart();
+  const { theme, toggle: toggleTheme } = useTheme();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const isOrdersActive = location.pathname === '/profile' && location.search.includes('tab=orders');
@@ -87,16 +89,18 @@ const Header = () => {
           )}
         </span>
       ) : (
-        <button
-          type="button"
-          className={styles.navLink}
-          onClick={() => {
-            signInWithGoogle();
-            closeMenu();
-          }}
-        >
-          login
-        </button>
+        <span className={styles.navGroupAuth}>
+          <button
+            type="button"
+            className={styles.navLink}
+            onClick={() => {
+              signInWithGoogle();
+              closeMenu();
+            }}
+          >
+            login
+          </button>
+        </span>
       )}
     </>
   );
@@ -104,9 +108,20 @@ const Header = () => {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        <NavLink to="/" className={styles.logo} onClick={closeMenu}>
-          suicore
-        </NavLink>
+        <div className={styles.logoGroup}>
+          <NavLink to="/" className={styles.logo} onClick={closeMenu}>
+            suicore
+          </NavLink>
+          <button
+            type="button"
+            className={styles.themeToggle}
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          >
+            <span className={theme === 'dark' ? styles.sunIcon : styles.moonIcon} />
+          </button>
+        </div>
         <nav className={styles.nav}>{navContent}</nav>
         <button
           type="button"

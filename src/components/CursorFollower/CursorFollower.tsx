@@ -13,6 +13,7 @@ function dist(ax: number, ay: number, bx: number, by: number) {
 
 export default function CursorFollower() {
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const targetRef = useRef({ x: 0, y: 0 });
   const isFloatingRef = useRef(false);
   const floatCenterRef = useRef({ x: 0, y: 0 });
@@ -22,6 +23,7 @@ export default function CursorFollower() {
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       targetRef.current = { x: e.clientX, y: e.clientY };
+      setCursorPos({ x: e.clientX, y: e.clientY });
     };
     window.addEventListener("mousemove", onMove, { passive: true });
 
@@ -71,12 +73,23 @@ export default function CursorFollower() {
   }, []);
 
   return (
-    <div
-      className={styles.circle}
-      style={{
-        transform: `translate(calc(${pos.x}px - 50%), calc(${pos.y}px - 50%))`,
-      }}
-      aria-hidden
-    />
+    <>
+      {/* Small precise cursor dot */}
+      <div
+        className={styles.cursorDot}
+        style={{
+          transform: `translate(calc(${cursorPos.x}px - 50%), calc(${cursorPos.y}px - 50%))`,
+        }}
+        aria-hidden
+      />
+      {/* Large floating follower */}
+      <div
+        className={styles.circle}
+        style={{
+          transform: `translate(calc(${pos.x}px - 50%), calc(${pos.y}px - 50%))`,
+        }}
+        aria-hidden
+      />
+    </>
   );
 }

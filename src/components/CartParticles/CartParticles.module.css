@@ -1,0 +1,57 @@
+.container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.burst {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 1;
+  animation: particleBurst 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--delay);
+}
+
+.square {
+  width: var(--size);
+  height: var(--size);
+  background: var(--particle-color);
+}
+
+.circle {
+  width: var(--size);
+  height: var(--size);
+  background: var(--particle-color);
+  border-radius: 50%;
+}
+
+.line {
+  width: calc(var(--size) * 1.8);
+  height: 2px;
+  background: var(--particle-color);
+}
+
+@keyframes particleBurst {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform:
+      translate(
+        calc(cos(var(--angle)) * var(--distance)),
+        calc(sin(var(--angle)) * var(--distance))
+      )
+      rotate(var(--rotation))
+      scale(0);
+    opacity: 0;
+  }
+}

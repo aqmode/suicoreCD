@@ -87,6 +87,14 @@ export default function TrackCard({
 
       <div className={styles.coverMini}>
         <img src={coverUrl} alt={track.name} draggable={false} />
+        {isActive && isPlaying && (
+          <div className={styles.eqOverlay}>
+            <span className={styles.eqBar} />
+            <span className={styles.eqBar} />
+            <span className={styles.eqBar} />
+            <span className={styles.eqBar} />
+          </div>
+        )}
       </div>
 
       {canPreview && (

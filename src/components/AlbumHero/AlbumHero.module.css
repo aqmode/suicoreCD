@@ -40,7 +40,7 @@
   flex-shrink: 0;
   width: 380px;
   height: 380px;
-  border: 2px solid #1a1a1a;
+  border: 2px solid var(--cover-border);
   border-radius: 3px;
   overflow: hidden;
   box-shadow:
@@ -124,7 +124,7 @@
 .divider {
   width: 36px;
   height: 1px;
-  background: #000;
+  background: var(--text);
   opacity: 0.1;
   margin: 24px 0;
 }
@@ -135,6 +135,29 @@
   gap: 24px;
 }
 
+.priceGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.discountBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  letter-spacing: 0.02em;
+}
+
+.priceOld {
+  font-size: 1rem;
+  font-weight: 400;
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
 .price {
   font-size: 1.5rem;
   font-weight: 600;
@@ -142,13 +165,13 @@
 
 .buyButton {
   padding: 14px 32px;
-  background: #000;
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: lowercase;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--btn-bg);
   cursor: pointer;
   transition:
     background 0.3s ease,
@@ -157,8 +180,8 @@
 }
 
 .buyButton:hover {
-  background: transparent;
-  color: #000;
+  background: var(--btn-hover-bg);
+  color: var(--btn-hover-text);
 }
 
 .buyButton:active {

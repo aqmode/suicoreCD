@@ -6,6 +6,74 @@
   box-sizing: border-box;
 }
 
+/* ── Theme variables ── */
+
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --text-muted: rgba(0, 0, 0, 0.4);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: #000;
+  --surface: rgba(0, 0, 0, 0.02);
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --header-border: #eee;
+  --scrollbar: rgba(0, 0, 0, 0.25);
+  --scrollbar-hover: rgba(0, 0, 0, 0.4);
+  --btn-bg: #000;
+  --btn-text: #fff;
+  --btn-hover-bg: transparent;
+  --btn-hover-text: #000;
+  --particle-color: #000;
+  --cover-border: #1a1a1a;
+  --selection-bg: #000;
+  --selection-text: #fff;
+  --input-border: rgba(0, 0, 0, 0.15);
+  --input-placeholder: rgba(0, 0, 0, 0.25);
+  --overlay-bg: rgba(0, 0, 0, 0.45);
+  --card-bg: #fff;
+  --card-bg-alt: #fafafa;
+  --accent-color: #000;
+  --shadow-sm: rgba(0, 0, 0, 0.06);
+  --shadow-md: rgba(0, 0, 0, 0.12);
+  --shadow-lg: rgba(0, 0, 0, 0.2);
+  --link-underline: rgba(0, 0, 0, 0.3);
+  --cursor-border: rgba(0, 0, 0, 0.5);
+  --cursor-follower: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --text: #e8e8e8;
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: #e8e8e8;
+  --surface: rgba(255, 255, 255, 0.04);
+  --header-bg: rgba(10, 10, 10, 0.88);
+  --header-border: #222;
+  --scrollbar: rgba(255, 255, 255, 0.2);
+  --scrollbar-hover: rgba(255, 255, 255, 0.35);
+  --btn-bg: #e8e8e8;
+  --btn-text: #0a0a0a;
+  --btn-hover-bg: transparent;
+  --btn-hover-text: #e8e8e8;
+  --particle-color: #e8e8e8;
+  --cover-border: #555;
+  --selection-bg: #fff;
+  --selection-text: #000;
+  --input-border: rgba(255, 255, 255, 0.15);
+  --input-placeholder: rgba(255, 255, 255, 0.25);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --card-bg: #1a1a1a;
+  --card-bg-alt: #111;
+  --accent-color: #e8e8e8;
+  --shadow-sm: rgba(0, 0, 0, 0.15);
+  --shadow-md: rgba(0, 0, 0, 0.3);
+  --shadow-lg: rgba(0, 0, 0, 0.45);
+  --link-underline: rgba(255, 255, 255, 0.3);
+  --cursor-border: rgba(255, 255, 255, 0.5);
+  --cursor-follower: rgba(255, 255, 255, 0.06);
+}
+
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
@@ -15,10 +83,11 @@ html {
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #ffffff;
-  color: #000000;
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Страницы с секционной прокруткой — без вертикального скроллбара */
@@ -29,7 +98,7 @@ body.section-scroll-page {
 /* Кастомный вертикальный скроллбар (где есть обычная прокрутка) */
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+  scrollbar-color: var(--scrollbar) transparent;
 }
 
 html::-webkit-scrollbar {
@@ -41,17 +110,24 @@ html::-webkit-scrollbar-track {
 }
 
 html::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--scrollbar);
   border-radius: 4px;
 }
 
 html::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--scrollbar-hover);
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ── Custom cursor (desktop only) ── */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
 }
 
 button {
@@ -67,6 +143,6 @@ img {
 }
 
 ::selection {
-  background: #000;
-  color: #fff;
+  background: var(--selection-bg);
+  color: var(--selection-text);
 }

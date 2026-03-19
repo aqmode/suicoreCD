@@ -16,10 +16,12 @@ interface Props {
   onPrev?: () => void;
   onNext?: () => void;
   onScrollDown?: () => void;
-  onAddToCart?: () => void;
+  onAddToCart?: (e: React.MouseEvent) => void;
   onRemoveFromCart?: () => void;
   inCart?: boolean;
   priceRub?: number;
+  originalPriceRub?: number;
+  discountPercent?: number;
   hasPrev: boolean;
   hasNext: boolean;
 }
@@ -34,12 +36,18 @@ export default function AlbumHero({
   onRemoveFromCart,
   inCart = false,
   priceRub,
+  originalPriceRub,
+  discountPercent = 0,
   hasPrev,
   hasNext,
 }: Props) {
   const isAlbum = release.type === 'album';
   const isSingle = release.type === 'single';
-  const handleCartClick = inCart ? onRemoveFromCart : onAddToCart;
+  const handleCartClick = inCart
+    ? onRemoveFromCart
+    : onAddToCart
+      ? (e: React.MouseEvent) => onAddToCart(e)
+      : undefined;
   const showPurchase = priceRub != null && (onAddToCart || onRemoveFromCart);
   const showSingleDetails = isSingle && singleTrackDurationMs != null;
 
@@ -83,7 +91,15 @@ export default function AlbumHero({
             <>
               <div className={styles.divider} />
               <div className={styles.purchase}>
-                <span className={styles.price}>{formatRub(priceRub)}</span>
+                <div className={styles.priceGroup}>
+                  {discountPercent > 0 && originalPriceRub != null && originalPriceRub !== priceRub && (
+                    <>
+                      <span className={styles.discountBadge}>−{discountPercent}%</span>
+                      <span className={styles.priceOld}>{formatRub(originalPriceRub)}</span>
+                    </>
+                  )}
+                  <span className={styles.price}>{formatRub(priceRub)}</span>
+                </div>
                 <button
                   type="button"
                   className={styles.buyButton}

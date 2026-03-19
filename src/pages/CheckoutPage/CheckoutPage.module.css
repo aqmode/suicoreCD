@@ -63,20 +63,20 @@
   padding: 14px 16px;
   font-family: inherit;
   font-size: 0.95rem;
-  color: #000;
+  color: var(--text);
   background: transparent;
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  border: 1.5px solid var(--input-border);
   border-radius: 0;
   outline: none;
   transition: border-color 0.25s ease;
 }
 
 .input:focus {
-  border-color: #000;
+  border-color: var(--border-strong);
 }
 
 .input::placeholder {
-  color: rgba(0, 0, 0, 0.25);
+  color: var(--input-placeholder);
 }
 
 .inputError {
@@ -101,15 +101,15 @@
   padding: 0 4px 0 0;
   font-family: inherit;
   font-size: 0.95rem;
-  color: #000;
+  color: var(--text);
   background: transparent;
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  border: 1.5px solid var(--input-border);
   border-radius: 0;
   transition: border-color 0.25s ease;
 }
 
 .phoneWrap:focus-within {
-  border-color: #000;
+  border-color: var(--border-strong);
 }
 
 .phoneWrap.inputError {
@@ -127,7 +127,7 @@
   align-items: center;
   margin-right: 0;
   padding: 0 10px 0 12px;
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: 1px solid var(--border);
 }
 
 .phoneWrap :global(.PhoneInputCountrySelect) {
@@ -165,7 +165,7 @@
   border-right-width: 1.5px;
   border-top-width: 0;
   border-left-width: 0;
-  transform: rotate(45deg);
+  border-color: var(--text-muted);
 }
 
 /* Поле ввода номера: без своей рамки, в тон обёртке */
@@ -176,14 +176,14 @@
   padding: 14px 16px 14px 12px;
   font-family: inherit;
   font-size: 0.95rem;
-  color: #000;
+  color: var(--text);
   background: transparent;
   border: none;
   outline: none;
 }
 
 .phoneWrap :global(.PhoneInputInput)::placeholder {
-  color: rgba(0, 0, 0, 0.25);
+  color: var(--input-placeholder);
 }
 
 /* Класс на инпут от inputClassName (дублирует стили выше для надёжности) */
@@ -193,7 +193,7 @@
 
 .totals {
   padding: 20px 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--border);
 }
 
 .totalsRow,
@@ -212,7 +212,7 @@
 .totalsRowTotal {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--input-border);
   font-weight: 600;
   font-size: 1.05rem;
 }
@@ -229,13 +229,13 @@
 .orderBtn {
   align-self: flex-start;
   padding: 16px 40px;
-  background: #000;
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   font-size: 0.85rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: lowercase;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--btn-bg);
   cursor: pointer;
   transition:
     background 0.3s ease,
@@ -244,8 +244,8 @@
 }
 
 .orderBtn:hover {
-  background: transparent;
-  color: #000;
+  background: var(--btn-hover-bg);
+  color: var(--btn-hover-text);
 }
 
 .orderBtn:active {
@@ -282,7 +282,7 @@
   width: 18px;
   height: 18px;
   margin-top: 2px;
-  accent-color: #000;
+  accent-color: var(--accent-color);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -306,7 +306,7 @@
 .pvzInfo {
   margin-top: 16px;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--surface);
   border-radius: 2px;
 }
 
@@ -338,7 +338,7 @@
 .tipOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -347,11 +347,11 @@
 }
 
 .tipModal {
-  background: #fff;
+  background: var(--card-bg);
   max-width: 420px;
   width: 100%;
   padding: 28px 32px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 60px var(--shadow-lg);
 }
 
 .tipTitle {
@@ -402,8 +402,8 @@
   font-weight: 600;
   text-transform: lowercase;
   letter-spacing: 0.04em;
-  color: #fff;
-  background: #000;
+  color: var(--btn-text);
+  background: var(--btn-bg);
   border: none;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -414,7 +414,7 @@
 }
 
 .tipClose:focus {
-  outline: 2px solid #000;
+  outline: 2px solid var(--border-strong);
   outline-offset: 2px;
 }
 

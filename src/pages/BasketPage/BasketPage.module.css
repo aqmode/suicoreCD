@@ -27,7 +27,7 @@
   list-style: none;
   padding: 0;
   margin: 0 0 32px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .row {
@@ -35,7 +35,7 @@
   align-items: center;
   gap: 20px;
   padding: 16px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--border);
 }
 
 .cover {
@@ -99,7 +99,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
   background: transparent;
   cursor: pointer;
   font-size: 1rem;
@@ -108,7 +108,7 @@
 }
 
 .qtyBtn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--surface);
 }
 
 .qtyNum {
@@ -138,7 +138,7 @@
   align-items: flex-start;
   gap: 16px;
   padding-top: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .total {
@@ -160,20 +160,20 @@
 
 .primaryBtn {
   padding: 14px 32px;
-  background: #000;
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   font-size: 0.85rem;
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: lowercase;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--btn-bg);
   cursor: pointer;
   transition: background 0.3s ease, color 0.3s ease;
 }
 
 .primaryBtn:hover {
-  background: transparent;
-  color: #000;
+  background: var(--btn-hover-bg);
+  color: var(--btn-hover-text);
 }
 
 .payBtn {
@@ -183,16 +183,16 @@
   letter-spacing: 0.06em;
   text-transform: lowercase;
   background: transparent;
-  color: #000;
-  border: 1.5px solid rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  border: 1.5px solid var(--link-underline);
   cursor: pointer;
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .payBtn:hover:not(:disabled) {
-  background: #000;
-  color: #fff;
-  border-color: #000;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-color: var(--btn-bg);
 }
 
 .payBtn:disabled {
