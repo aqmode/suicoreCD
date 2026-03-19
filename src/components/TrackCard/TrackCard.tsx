@@ -108,21 +108,23 @@ export default function TrackCard({
       <div className={styles.trackInfo}>
         <span className={styles.trackName}>{track.name}</span>
         <span className={styles.albumArtist}>
-          {albumName} · {artistName} · 85г ·   физический CD носитель
+          {albumName} · {artistName}
         </span>
       </div>
 
       <span className={styles.duration}>{formatDuration(track.durationMs)}</span>
 
-      <button
-        type="button"
-        className={styles.buyBtn}
-        onClick={handleCartClick}
-        disabled={!handleCartClick}
-        data-onboarding={isSummerDelight ? 'track-summer-delight-cart' : undefined}
-      >
-        {inCart ? 'В корзине' : (priceRub != null ? formatRub(priceRub) : '—')}
-      </button>
+      {(onAddToCart || onRemoveFromCart) && (
+        <button
+          type="button"
+          className={styles.buyBtn}
+          onClick={handleCartClick}
+          disabled={!handleCartClick}
+          data-onboarding={isSummerDelight ? 'track-summer-delight-cart' : undefined}
+        >
+          {inCart ? 'В корзине' : (priceRub != null ? formatRub(priceRub) : '—')}
+        </button>
+      )}
     </div>
   );
 }

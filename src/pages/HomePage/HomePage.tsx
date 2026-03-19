@@ -10,7 +10,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSpotify } from '../../context/SpotifyContext';
 import { useCart } from '../../context/CartContext';
-import { getPriceRub } from '../../lib/prices';
+import { getPriceRub, formatRub } from '../../lib/prices';
 import { useSectionScroll } from '../../hooks/useSectionScroll';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import AlbumHero from '../../components/AlbumHero/AlbumHero';
@@ -84,9 +84,7 @@ export default function HomePage() {
 
   const release = releases[currentIndex];
   const isAlbum = release?.type === 'album';
-  const releaseInCart = release ? items.some((i) => i.release_id === release.id && !i.track_id) : false;
-  const getCartItemForTrack = (trackId: string) =>
-    items.find((i) => i.release_id === release?.id && i.track_id === trackId);
+  const inCart = release ? items.some((i) => i.release_id === release.id && !i.track_id) : false;
 
   useEffect(() => {
     if (!releases.length) return;
@@ -167,25 +165,15 @@ export default function HomePage() {
   }
 
   const priceRub = getPriceRub(release.name, { isFirstInCatalog: currentIndex === 0 });
-  const handleAddReleaseToCart = () => {
+  // Добавить релиз в корзину (альбом целиком или сингл — без track)
+  const handleAddToCart = () => {
     addItem(
       { id: release.id, name: release.name, coverUrl: release.coverUrl },
       priceRub
     );
   };
-  const handleRemoveReleaseFromCart = () => {
+  const handleRemoveFromCart = () => {
     const item = items.find((i) => i.release_id === release.id && !i.track_id);
-    if (item) removeItem(item.id);
-  };
-  const handleAddTrackToCart = (track: Track) => {
-    addItem(
-      { id: release.id, name: release.name, coverUrl: release.coverUrl },
-      priceRub,
-      { id: track.id, name: track.name }
-    );
-  };
-  const handleRemoveTrackFromCart = (trackId: string) => {
-    const item = getCartItemForTrack(trackId);
     if (item) removeItem(item.id);
   };
 
@@ -221,10 +209,10 @@ export default function HomePage() {
               }
             : undefined
         }
-        onAddToCart={!isAlbum ? handleAddReleaseToCart : undefined}
-        onRemoveFromCart={!isAlbum ? handleRemoveReleaseFromCart : undefined}
-        inCart={!isAlbum && releaseInCart}
-        priceRub={isAlbum ? undefined : priceRub}
+        onAddToCart={handleAddToCart}
+        onRemoveFromCart={handleRemoveFromCart}
+        inCart={inCart}
+        priceRub={priceRub}
       />
     </div>
   );
@@ -235,7 +223,7 @@ export default function HomePage() {
       <div className={styles.trackHeader}>
         <h2 className={styles.trackTitle}>{release.name}</h2>
         <p className={styles.trackSubtitle}>
-          85г · физические CD носители
+          Треклист альбома · 1 диск · 85г
         </p>
       </div>
 
@@ -246,32 +234,30 @@ export default function HomePage() {
       ) : tracks.length > 0 ? (
         <>
           <div className={styles.trackList}>
-            {tracks.map((track) => {
-              const cartItem = getCartItemForTrack(track.id);
-              const inCartTrack = !!cartItem;
-              return (
-                <TrackCard
-                  key={track.id}
-                  track={track}
-                  coverUrl={release.coverUrl}
-                  albumName={release.name}
-                  artistName="suicore"
-                  priceRub={priceRub}
-                  onAddToCart={() => handleAddTrackToCart(track)}
-                  onRemoveFromCart={() => handleRemoveTrackFromCart(track.id)}
-                  inCart={inCartTrack}
-                  previewPlayingId={previewPlayingId}
-                  onPreviewPlay={setPreviewPlayingId}
-                  onPreviewStop={() => setPreviewPlayingId(null)}
-                />
-              );
-            })}
+            {tracks.map((track) => (
+              <TrackCard
+                key={track.id}
+                track={track}
+                coverUrl={release.coverUrl}
+                albumName={release.name}
+                artistName="suicore"
+                priceRub={priceRub}
+                previewPlayingId={previewPlayingId}
+                onPreviewPlay={setPreviewPlayingId}
+                onPreviewStop={() => setPreviewPlayingId(null)}
+              />
+            ))}
           </div>
-          {isAlbum && (
-            <p className={styles.albumDiscountNote}>
-              Скидка 15% при покупке сета из 3-х дисков.
-            </p>
-          )}
+          <div className={styles.albumCartWrap}>
+            <button
+              type="button"
+              className={styles.buyButton}
+              onClick={inCart ? handleRemoveFromCart : handleAddToCart}
+            >
+              {inCart ? 'В корзине ✓' : 'Добавить альбом в корзину'}
+            </button>
+            <span className={styles.albumCartPrice}>{formatRub(priceRub)}</span>
+          </div>
           {!isMobile && (
             <div className={styles.diskWrap}>
               <CDCard coverUrl={release.coverUrl} compact visualOnly />

@@ -208,32 +208,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems([]);
   }, [user?.id, fetchCart]);
 
-  /** Количество дисков (track-позиций) в корзине по release_id. При 3 дисках одного альбома — скидка 15%. */
-  const releaseDiscCount = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const i of items) {
-      if (i.track_id != null) {
-        m.set(i.release_id, (m.get(i.release_id) ?? 0) + 1);
-      }
-    }
-    return m;
-  }, [items]);
-
+  /** В новой модели "1 альбом = 1 диск" скидка за набор дисков не применяется */
   const getEffectivePrice = useCallback(
-    (item: CartItem) => {
-      if (item.track_id == null) return item.price_rub;
-      if (releaseDiscCount.get(item.release_id) === 3) return Math.round(item.price_rub * 0.85);
-      return item.price_rub;
-    },
-    [releaseDiscCount]
+    (item: CartItem) => item.price_rub,
+    []
   );
 
   const hasAlbumDiscount = useCallback(
-    (item: CartItem) => {
-      if (item.track_id == null) return false;
-      return releaseDiscCount.get(item.release_id) === 3;
-    },
-    [releaseDiscCount]
+    (_item: CartItem) => false,
+    []
   );
 
   const totalRub = useMemo(
