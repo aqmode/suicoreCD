@@ -473,14 +473,31 @@ app.post('/api/payments/yookassa', async (req, res) => {
   }
 });
 
-// ---------- Admin (no auth middleware; password inside) ----------
+// ---------- Admin (password from env, no SQL functions) ----------
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+
+function checkAdmin(password: unknown): boolean {
+  return typeof password === 'string' && password.length > 0 && password === ADMIN_PASSWORD;
+}
+
 app.post('/api/admin/data', async (req, res) => {
   try {
     const { admin_password } = req.body;
-    const r = await pool.query('SELECT public.get_admin_data($1::text) AS result', [admin_password]);
-    const result = r.rows[0]?.result ?? null;
-    if (result == null) return res.status(401).json({ error: 'Неверный пароль' });
-    res.json(result);
+    if (!checkAdmin(admin_password)) return res.status(401).json({ error: 'Неверный пароль' });
+
+    const usersQ = await pool.query('SELECT * FROM public.profiles');
+    const ordersQ = await pool.query(`
+      SELECT o.*,
+        coalesce(
+          (SELECT json_agg(row_to_json(i))
+           FROM public.order_items i WHERE i.order_id = o.id),
+          '[]'::json
+        ) AS items
+      FROM public.orders o
+      WHERE o.status IS DISTINCT FROM 'deleted'
+      ORDER BY o.created_at DESC
+    `);
+    res.json({ users: usersQ.rows, orders: ordersQ.rows });
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
   }
@@ -490,9 +507,12 @@ app.post('/api/admin/orders/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_password, new_status } = req.body;
-    const r = await pool.query('SELECT public.update_order_status_admin($1::text, $2::uuid, $3::text) AS ok', [admin_password, id, new_status]);
-    const ok = r.rows[0]?.ok;
-    if (!ok) return res.status(400).json({ error: 'Не удалось обновить статус' });
+    if (!checkAdmin(admin_password)) return res.status(401).json({ error: 'Неверный пароль' });
+    const allowed = ['new', 'paid', 'shipped', 'at_pvz'];
+    if (!new_status || !allowed.includes(new_status)) {
+      return res.status(400).json({ error: 'Недопустимый статус' });
+    }
+    await pool.query('UPDATE public.orders SET status = $1 WHERE id = $2', [new_status, id]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
@@ -503,9 +523,9 @@ app.post('/api/admin/orders/:id/delete', async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_password } = req.body;
-    const r = await pool.query('SELECT public.delete_order_admin($1::text, $2::uuid) AS ok', [admin_password, id]);
-    const ok = r.rows[0]?.ok;
-    if (!ok) return res.status(400).json({ error: 'Не удалось удалить заказ' });
+    if (!checkAdmin(admin_password)) return res.status(401).json({ error: 'Неверный пароль' });
+    await pool.query('DELETE FROM public.order_items WHERE order_id = $1', [id]);
+    await pool.query('DELETE FROM public.orders WHERE id = $1', [id]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
