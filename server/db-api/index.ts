@@ -477,7 +477,7 @@ app.post('/api/payments/yookassa', async (req, res) => {
 app.post('/api/admin/data', async (req, res) => {
   try {
     const { admin_password } = req.body;
-    const r = await pool.query('SELECT public.get_admin_data($1) AS result', [admin_password]);
+    const r = await pool.query('SELECT public.get_admin_data($1::text) AS result', [admin_password]);
     const result = r.rows[0]?.result ?? null;
     if (result == null) return res.status(401).json({ error: 'Неверный пароль' });
     res.json(result);
@@ -490,7 +490,7 @@ app.post('/api/admin/orders/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_password, new_status } = req.body;
-    const r = await pool.query('SELECT public.update_order_status_admin($1, $2, $3) AS ok', [admin_password, id, new_status]);
+    const r = await pool.query('SELECT public.update_order_status_admin($1::text, $2::uuid, $3::text) AS ok', [admin_password, id, new_status]);
     const ok = r.rows[0]?.ok;
     if (!ok) return res.status(400).json({ error: 'Не удалось обновить статус' });
     res.json({ ok: true });
@@ -503,7 +503,7 @@ app.post('/api/admin/orders/:id/delete', async (req, res) => {
   try {
     const { id } = req.params;
     const { admin_password } = req.body;
-    const r = await pool.query('SELECT public.delete_order_admin($1, $2) AS ok', [admin_password, id]);
+    const r = await pool.query('SELECT public.delete_order_admin($1::text, $2::uuid) AS ok', [admin_password, id]);
     const ok = r.rows[0]?.ok;
     if (!ok) return res.status(400).json({ error: 'Не удалось удалить заказ' });
     res.json({ ok: true });

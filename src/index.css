@@ -37,8 +37,6 @@
   --shadow-md: rgba(0, 0, 0, 0.12);
   --shadow-lg: rgba(0, 0, 0, 0.2);
   --link-underline: rgba(0, 0, 0, 0.3);
-  --cursor-border: rgba(0, 0, 0, 0.5);
-  --cursor-follower: rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="dark"] {
@@ -70,8 +68,6 @@
   --shadow-md: rgba(0, 0, 0, 0.3);
   --shadow-lg: rgba(0, 0, 0, 0.45);
   --link-underline: rgba(255, 255, 255, 0.3);
-  --cursor-border: rgba(255, 255, 255, 0.5);
-  --cursor-follower: rgba(255, 255, 255, 0.06);
 }
 
 html {
@@ -121,13 +117,6 @@ html::-webkit-scrollbar-thumb:hover {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-/* ── Custom cursor (desktop only) ── */
-@media (hover: hover) and (pointer: fine) {
-  * {
-    cursor: none !important;
-  }
 }
 
 button {

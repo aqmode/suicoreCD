@@ -2,7 +2,6 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Header from './components/Header/Header';
 import FloatingCharacter from './components/FloatingCharacter/FloatingCharacter';
-import CursorFollower from './components/CursorFollower/CursorFollower';
 import HomePage from './pages/HomePage/HomePage';
 import CatalogPage from './pages/CatalogPage/CatalogPage';
 import AboutPage from './pages/AboutPage/AboutPage';
@@ -65,7 +64,6 @@ function App() {
   return (
     <div className="app">
       <Header />
-      <CursorFollower />
       <FloatingCharacter />
       <div className="app-mobile-float" aria-hidden>
         <img src="/suicore.png" alt="" draggable={false} />
