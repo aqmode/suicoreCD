@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import * as api from "../../lib/api";
 import { formatRub } from "../../lib/prices";
+import { getDeliveryCostRub } from "../../lib/delivery";
 import { isValidFullName, fullNameError } from "../../lib/validation";
 import PochtaWidget, { type PochtaPoint } from "../../components/PochtaWidget/PochtaWidget";
 import styles from "./CheckoutPage.module.css";
@@ -40,9 +41,12 @@ export default function CheckoutPage() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [paymentTipOpen, setPaymentTipOpen] = useState(false);
 
+  const diskCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const deliveryRub = ONE_RUBLE_DELIVERY
     ? (pochtaPoint ? 1 : 0)
-    : (pochtaPoint ? pochtaPoint.delivery_rub : 0);
+    : (pochtaPoint
+        ? getDeliveryCostRub(pochtaPoint.city, pochtaPoint.coords, diskCount)
+        : 0);
   const totalWithDelivery = totalRub + deliveryRub;
 
   const fullNameValid = isValidFullName(fullName);
@@ -217,6 +221,11 @@ export default function CheckoutPage() {
                   <span className={styles.pvzLabel}>Стоимость доставки:</span>
                   <span className={styles.pvzValue}>{formatRub(deliveryRub)}</span>
                 </div>
+                {diskCount > 1 && (
+                  <p className={styles.hint} style={{ marginTop: 4 }}>
+                    +150 ₽ за каждый дополнительный диск ({diskCount} шт.)
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -228,7 +237,7 @@ export default function CheckoutPage() {
             </div>
             <div className={styles.totalsRow}>
               <span className={styles.totalsLabel}>
-                Доставка{deliveryRub === 0 ? " (тестовый заказ — без доставки)" : ""}
+                Доставка{diskCount > 1 ? ` (${diskCount} диск.)` : ""}{deliveryRub === 0 ? " — тестовый заказ" : ""}
               </span>
               <span className={styles.totalsValue}>{formatRub(deliveryRub)}</span>
             </div>

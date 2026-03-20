@@ -4,8 +4,62 @@
 
 .container {
   width: 100%;
-  min-height: 400px;
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
-  background: #fafafa;
+  min-height: 0;
+  border: 1.5px solid var(--input-border, rgba(0, 0, 0, 0.15));
+  background: var(--card-bg-alt, #fafafa);
 }
 
+/* ── Fallback (ручной ввод) ── */
+.fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 0;
+}
+
+.fallbackHint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.fallbackInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--input-border, rgba(0, 0, 0, 0.15));
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.fallbackInput:focus {
+  border-color: var(--accent-color, #000);
+}
+
+.fallbackInput::placeholder {
+  color: var(--input-placeholder, rgba(0, 0, 0, 0.3));
+}
+
+.fallbackBtn {
+  align-self: flex-start;
+  padding: 10px 24px;
+  border: 1.5px solid var(--border-strong, #000);
+  background: var(--btn-bg, #000);
+  color: var(--btn-text, #fff);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.fallbackBtn:hover:not(:disabled) {
+  background: var(--btn-hover-bg, transparent);
+  color: var(--btn-hover-text, #000);
+}
+
+.fallbackBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
