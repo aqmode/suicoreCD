@@ -532,5 +532,95 @@ app.post('/api/admin/orders/:id/delete', async (req, res) => {
   }
 });
 
+// ---------- Pochta Russia API (tariff + address normalization) ----------
+const POCHTA_TOKEN = process.env.POCHTA_API_TOKEN || '';
+const POCHTA_USER_KEY = process.env.POCHTA_USER_KEY || '';
+const POCHTA_BASE = 'https://otpravka-api.pochta.ru/1.0';
+const POCHTA_INDEX_FROM = process.env.POCHTA_INDEX_FROM || '420000'; // Казань
+
+async function pochtaFetch(path: string, method: string, body?: unknown) {
+  const headers: Record<string, string> = {
+    'Authorization': `AccessToken ${POCHTA_TOKEN}`,
+    'X-User-Authorization': `Basic ${POCHTA_USER_KEY}`,
+    'Accept': 'application/json;charset=UTF-8',
+    'Content-Type': 'application/json',
+  };
+  const resp = await fetch(`${POCHTA_BASE}${path}`, {
+    method,
+    headers,
+    body: body != null ? JSON.stringify(body) : undefined,
+  });
+  return resp;
+}
+
+// Нормализация адреса → индекс, город, регион
+app.post('/api/pochta/clean-address', async (req, res) => {
+  try {
+    const { address } = req.body;
+    if (!address || typeof address !== 'string') {
+      return res.status(400).json({ error: 'Нужен адрес' });
+    }
+    const resp = await pochtaFetch('/clean/address', 'POST', [
+      { id: '1', 'original-address': address },
+    ]);
+    if (!resp.ok) {
+      const text = await resp.text();
+      return res.status(resp.status).json({ error: text });
+    }
+    const data = await resp.json();
+    const item = Array.isArray(data) ? data[0] : data;
+    res.json({
+      index: item?.index ?? null,
+      place: item?.place ?? null,
+      region: item?.region ?? null,
+      street: item?.street ?? null,
+      house: item?.house ?? null,
+      qualityCode: item?.['quality-code'] ?? null,
+      validationCode: item?.['validation-code'] ?? null,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
+  }
+});
+
+// Расчёт тарифа Почты России из Казани до индекса назначения
+app.post('/api/pochta/tariff', async (req, res) => {
+  try {
+    const { indexTo, mass, diskCount } = req.body;
+    if (!indexTo || typeof indexTo !== 'string') {
+      return res.status(400).json({ error: 'Нужен индекс назначения (indexTo)' });
+    }
+    const disks = Math.max(1, Number(diskCount) || 1);
+    // 1 CD ≈ 100г в коробке, каждый доп. диск +80г
+    const totalMass = mass || (100 + (disks - 1) * 80);
+    const resp = await pochtaFetch('/tariff', 'POST', {
+      'index-from': POCHTA_INDEX_FROM,
+      'index-to': indexTo,
+      'mail-category': 'ORDINARY',
+      'mail-type': 'POSTAL_PARCEL',
+      'mass': totalMass,
+      'dimension': { height: 14, length: 13 + (disks - 1) * 1, width: 13 },
+      'fragile': false,
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      return res.status(resp.status).json({ error: text });
+    }
+    const data = await resp.json();
+    const totalRate = data['total-rate'] ?? 0; // копейки
+    const deliveryRub = Math.ceil(totalRate / 100);
+    const minDays = data['delivery-time']?.['min-days'] ?? null;
+    const maxDays = data['delivery-time']?.['max-days'] ?? null;
+    res.json({
+      deliveryRub,
+      minDays,
+      maxDays,
+      raw: data,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
+  }
+});
+
 const PORT = Number(process.env.API_PORT) || 3001;
 app.listen(PORT, () => console.log(`[db-api] http://localhost:${PORT}`));

@@ -7,7 +7,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import * as api from "../../lib/api";
 import { formatRub } from "../../lib/prices";
-import { getDeliveryCostRub } from "../../lib/delivery";
 import { isValidFullName, fullNameError } from "../../lib/validation";
 import PochtaWidget, { type PochtaPoint } from "../../components/PochtaWidget/PochtaWidget";
 import styles from "./CheckoutPage.module.css";
@@ -42,11 +41,10 @@ export default function CheckoutPage() {
   const [paymentTipOpen, setPaymentTipOpen] = useState(false);
 
   const diskCount = items.reduce((sum, i) => sum + i.quantity, 0);
+  // Цена доставки приходит из PochtaWidget (реальный тариф API Почты или fallback)
   const deliveryRub = ONE_RUBLE_DELIVERY
     ? (pochtaPoint ? 1 : 0)
-    : (pochtaPoint
-        ? getDeliveryCostRub(pochtaPoint.city, pochtaPoint.coords, diskCount)
-        : 0);
+    : (pochtaPoint ? pochtaPoint.delivery_rub : 0);
   const totalWithDelivery = totalRub + deliveryRub;
 
   const fullNameValid = isValidFullName(fullName);
@@ -200,32 +198,18 @@ export default function CheckoutPage() {
 
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>Доставка Почтой России</h2>
-            <p className={styles.hint}>Выберите отделение на карте</p>
-            <PochtaWidget onSelect={handlePochtaSelect} />
+            <PochtaWidget onSelect={handlePochtaSelect} diskCount={diskCount} />
             {submitAttempted && !pochtaPoint && (
               <p className={styles.fieldError} role="alert">
-                Выберите отделение Почты России на карте
+                Введите адрес и подтвердите его
               </p>
             )}
-            {pochtaPoint && (
+            {pochtaPoint && pochtaPoint.deliveryDays && (
               <div className={styles.pvzInfo}>
                 <div className={styles.pvzRow}>
-                  <span className={styles.pvzLabel}>Код ОПС:</span>
-                  <span className={styles.pvzValue}>{pochtaPoint.pvz_code}</span>
+                  <span className={styles.pvzLabel}>Ориентировочный срок:</span>
+                  <span className={styles.pvzValue}>{pochtaPoint.deliveryDays}</span>
                 </div>
-                <div className={styles.pvzRow}>
-                  <span className={styles.pvzLabel}>Адрес:</span>
-                  <span className={styles.pvzValue}>{pochtaPoint.address}</span>
-                </div>
-                <div className={styles.pvzRow}>
-                  <span className={styles.pvzLabel}>Стоимость доставки:</span>
-                  <span className={styles.pvzValue}>{formatRub(deliveryRub)}</span>
-                </div>
-                {diskCount > 1 && (
-                  <p className={styles.hint} style={{ marginTop: 4 }}>
-                    +150 ₽ за каждый дополнительный диск ({diskCount} шт.)
-                  </p>
-                )}
               </div>
             )}
           </div>

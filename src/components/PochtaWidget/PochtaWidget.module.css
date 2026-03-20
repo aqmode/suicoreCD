@@ -2,30 +2,16 @@
   width: 100%;
 }
 
-.container {
+/* ── Address input ── */
+.inputGroup {
+  position: relative;
   width: 100%;
-  min-height: 0;
-  border: 1.5px solid var(--input-border, rgba(0, 0, 0, 0.15));
-  background: var(--card-bg-alt, #fafafa);
 }
 
-/* ── Fallback (ручной ввод) ── */
-.fallback {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 0;
-}
-
-.fallbackHint {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-
-.fallbackInput {
+.addressInput {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
+  padding-right: 40px;
   border: 1.5px solid var(--input-border, rgba(0, 0, 0, 0.15));
   border-radius: 6px;
   font-size: 0.95rem;
@@ -35,31 +21,105 @@
   transition: border-color 0.2s;
 }
 
-.fallbackInput:focus {
+.addressInput:focus {
   border-color: var(--accent-color, #000);
 }
 
-.fallbackInput::placeholder {
+.addressInput::placeholder {
   color: var(--input-placeholder, rgba(0, 0, 0, 0.3));
 }
 
-.fallbackBtn {
-  align-self: flex-start;
+.spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border, rgba(0,0,0,0.1));
+  border-top-color: var(--accent-color, #000);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ── Result card ── */
+.resultCard {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1.5px solid var(--border, rgba(0,0,0,0.08));
+  border-radius: 8px;
+  background: var(--surface, rgba(0,0,0,0.02));
+}
+
+.resultRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  gap: 12px;
+}
+
+.resultLabel {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.resultValue {
+  font-size: 0.95rem;
+  color: var(--text);
+  text-align: right;
+}
+
+.price {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.diskHint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.confirmBtn {
+  margin-top: 12px;
+  width: 100%;
   padding: 10px 24px;
   border: 1.5px solid var(--border-strong, #000);
   background: var(--btn-bg, #000);
   color: var(--btn-text, #fff);
   font-size: 0.95rem;
+  border-radius: 0;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
 }
 
-.fallbackBtn:hover:not(:disabled) {
+.confirmBtn:hover {
   background: var(--btn-hover-bg, transparent);
   color: var(--btn-hover-text, #000);
 }
 
-.fallbackBtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.confirmedText {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: var(--accent-color, #000);
+  font-weight: 500;
+}
+
+.error {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #c00;
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
 }

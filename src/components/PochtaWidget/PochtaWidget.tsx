@@ -1,182 +1,191 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { apiPochtaCleanAddress, apiPochtaTariff } from "../../lib/api";
+import { getDeliveryCostRub } from "../../lib/delivery";
 import styles from "./PochtaWidget.module.css";
-
-const WIDGET_SCRIPT_URL = "https://widget.pochta.ru/map/widget/widget.js";
-const WIDGET_ID = Number(import.meta.env.VITE_POCHTA_WIDGET_ID) || 61032;
-const CONTAINER_ID = "ecom-widget-pochta";
 
 export interface PochtaPoint {
   pvz_code: string;
   address: string;
   pvz_name: string;
   delivery_rub: number;
-  /** Город из виджета (для нашего расчёта доставки) */
   city: string | null;
-  /** Координаты [lat, lon] (для fallback расчёта) */
   coords: [number, number] | null;
-}
-
-declare global {
-  interface Window {
-    ecomStartWidget?: (opts: {
-      id: number;
-      callbackFunction: (pvzData: unknown) => void;
-      containerId: string;
-    }) => void;
-  }
-}
-
-/** Формат данных виджета Почты России: indexTo, cashOfDelivery (в копейках), regionTo, cityTo, addressTo */
-function normalizePvzData(data: unknown): PochtaPoint | null {
-  if (!data || typeof data !== "object") return null;
-  const o = data as Record<string, unknown>;
-  const index = [o.indexTo, o.index, o.postalCode].find((v) => v != null && String(v).trim()) as string | undefined;
-  const pvz_code = index != null ? String(index).trim() : "";
-  let delivery_rub = 0;
-  const rawCost = o.cashOfDelivery ?? o.cashservice ?? o.paySum ?? 0;
-  if (typeof rawCost === "number" && rawCost > 0) delivery_rub = Math.round(rawCost / 100);
-  else if (typeof rawCost === "string") {
-    const n = parseFloat(rawCost.replace(/\s/g, "").replace(",", "."));
-    if (!Number.isNaN(n) && n > 0) delivery_rub = Math.round(n / 100);
-  }
-  const addressParts = [o.regionTo, o.cityTo, o.addressTo].filter((v) => v != null && String(v).trim());
-  const address = addressParts.length > 0 ? addressParts.join(", ") : (o.addressTo != null ? String(o.addressTo) : "") || (o.address != null ? String(o.address) : "");
-  const pvz_name = (o.name != null && String(o.name).trim()) ? String(o.name).trim() : "Почта России";
-
-  // Город
-  const cityRaw = o.cityTo ?? o.city ?? null;
-  const city = cityRaw != null && String(cityRaw).trim() ? String(cityRaw).trim() : null;
-
-  // Координаты
-  let coords: [number, number] | null = null;
-  const lat = Number(o.latitude ?? o.lat ?? 0);
-  const lon = Number(o.longitude ?? o.lng ?? o.lon ?? 0);
-  if (lat !== 0 && lon !== 0 && !Number.isNaN(lat) && !Number.isNaN(lon)) {
-    coords = [lat, lon];
-  }
-
-  if (!address && !pvz_code) return null;
-  return {
-    pvz_code: pvz_code || "—",
-    address: address || "—",
-    pvz_name,
-    delivery_rub,
-    city,
-    coords,
-  };
+  /** Срок доставки (текст) */
+  deliveryDays: string | null;
 }
 
 interface Props {
   onSelect: (point: PochtaPoint) => void;
+  diskCount?: number;
 }
 
-export default function PochtaWidget({ onSelect }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
+  const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{
+    index: string;
+    place: string;
+    region: string;
+    deliveryRub: number;
+    minDays: number | null;
+    maxDays: number | null;
+    fullAddress: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
-  const [widgetFailed, setWidgetFailed] = useState(false);
-  const [manualCity, setManualCity] = useState("");
-  const [manualAddress, setManualAddress] = useState("");
-  const [manualIndex, setManualIndex] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const lookupAddress = useCallback(async (addr: string) => {
+    if (addr.trim().length < 5) return;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setConfirmed(false);
+    try {
+      const { data: clean, error: cleanErr } = await apiPochtaCleanAddress(addr);
+      if (cleanErr || !clean?.index) {
+        const cityMatch = addr.match(/^([^,]+)/);
+        const city = cityMatch?.[1]?.trim() || null;
+        const fallbackRub = getDeliveryCostRub(city, null, diskCount);
+        setResult({
+          index: "—",
+          place: city || "—",
+          region: "—",
+          deliveryRub: fallbackRub,
+          minDays: null,
+          maxDays: null,
+          fullAddress: addr,
+        });
+        setLoading(false);
+        return;
+      }
+      const place = clean.place || "—";
+      const region = clean.region || "—";
+      const idx = clean.index;
+
+      const { data: tariff } = await apiPochtaTariff(idx, diskCount);
+      let deliveryRub: number;
+      let minDays: number | null = null;
+      let maxDays: number | null = null;
+
+      if (tariff?.deliveryRub) {
+        deliveryRub = tariff.deliveryRub;
+        minDays = tariff.minDays;
+        maxDays = tariff.maxDays;
+      } else {
+        deliveryRub = getDeliveryCostRub(place, null, diskCount);
+      }
+      setResult({ index: idx, place, region, deliveryRub, minDays, maxDays, fullAddress: addr });
+    } catch {
+      setError("Не удалось рассчитать доставку. Попробуйте ещё раз.");
+    } finally {
+      setLoading(false);
+    }
+  }, [diskCount]);
+
+  const handleAddressChange = (val: string) => {
+    setAddress(val);
+    setConfirmed(false);
+    clearTimeout(debounceRef.current);
+    if (val.trim().length >= 5) {
+      debounceRef.current = setTimeout(() => lookupAddress(val), 800);
+    } else {
+      setResult(null);
+      setError(null);
+    }
+  };
 
   useEffect(() => {
-    const container = document.getElementById(CONTAINER_ID);
-    if (!container) return;
+    if (result && address.trim().length >= 5) {
+      lookupAddress(address);
+    }
+  }, [diskCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const win = window as unknown as Record<string, (data: unknown) => void>;
-    win.pochtaCallbackFunction = (pvzData: unknown) => {
-      const point = normalizePvzData(pvzData);
-      if (point) onSelectRef.current(point);
-    };
-
-    let widgetTimeout: ReturnType<typeof setTimeout>;
-
-    const script = document.createElement("script");
-    script.src = WIDGET_SCRIPT_URL;
-    script.async = false;
-    script.onload = () => {
-      if (window.ecomStartWidget) {
-        window.ecomStartWidget({
-          id: WIDGET_ID,
-          containerId: CONTAINER_ID,
-          callbackFunction: win.pochtaCallbackFunction!,
-        });
-        // Если виджет не загрузил iframe за 8 сек — показываем ручной ввод
-        widgetTimeout = setTimeout(() => {
-          const iframe = container.querySelector("iframe");
-          if (!iframe) setWidgetFailed(true);
-        }, 8000);
-      } else {
-        setWidgetFailed(true);
-      }
-    };
-    script.onerror = () => setWidgetFailed(true);
-    document.body.appendChild(script);
-    return () => {
-      clearTimeout(widgetTimeout);
-      script.remove();
-      delete win.pochtaCallbackFunction;
-    };
-  }, []);
-
-  const handleManualSubmit = () => {
-    const city = manualCity.trim();
-    const address = manualAddress.trim();
-    if (!city || !address) return;
+  const handleConfirm = () => {
+    if (!result) return;
+    setConfirmed(true);
+    const daysText = result.minDays != null && result.maxDays != null
+      ? `${result.minDays}–${result.maxDays} дн.`
+      : result.maxDays != null
+        ? `до ${result.maxDays} дн.`
+        : null;
     onSelectRef.current({
-      pvz_code: manualIndex.trim() || "—",
-      address: `${city}, ${address}`,
+      pvz_code: result.index,
+      address: result.fullAddress,
       pvz_name: "Почта России",
-      delivery_rub: 0,
-      city,
+      delivery_rub: result.deliveryRub,
+      city: result.place,
       coords: null,
+      deliveryDays: daysText,
     });
+  };
+
+  const formatDays = () => {
+    if (!result) return "";
+    if (result.minDays != null && result.maxDays != null) {
+      return result.minDays === result.maxDays
+        ? `${result.minDays} дн.`
+        : `${result.minDays}–${result.maxDays} дн.`;
+    }
+    if (result.maxDays != null) return `до ${result.maxDays} дн.`;
+    return "";
   };
 
   return (
     <div className={styles.wrapper}>
-      <div
-        id={CONTAINER_ID}
-        ref={containerRef}
-        className={styles.container}
-        style={{ height: widgetFailed ? 0 : 500, overflow: "hidden" }}
-      />
-      {widgetFailed && (
-        <div className={styles.fallback}>
-          <p className={styles.fallbackHint}>
-            Виджет Почты России недоступен. Введите адрес вручную:
-          </p>
-          <input
-            type="text"
-            className={styles.fallbackInput}
-            placeholder="Город (напр. Москва)"
-            value={manualCity}
-            onChange={(e) => setManualCity(e.target.value)}
-          />
-          <input
-            type="text"
-            className={styles.fallbackInput}
-            placeholder="Адрес отделения или полный адрес"
-            value={manualAddress}
-            onChange={(e) => setManualAddress(e.target.value)}
-          />
-          <input
-            type="text"
-            className={styles.fallbackInput}
-            placeholder="Индекс (необязательно)"
-            value={manualIndex}
-            onChange={(e) => setManualIndex(e.target.value)}
-          />
-          <button
-            type="button"
-            className={styles.fallbackBtn}
-            onClick={handleManualSubmit}
-            disabled={!manualCity.trim() || !manualAddress.trim()}
-          >
-            Подтвердить адрес
-          </button>
+      <div className={styles.inputGroup}>
+        <input
+          type="text"
+          className={styles.addressInput}
+          placeholder="Город, улица, дом (напр. Москва, Тверская 1)"
+          value={address}
+          onChange={(e) => handleAddressChange(e.target.value)}
+          aria-label="Адрес доставки"
+        />
+        {loading && <span className={styles.spinner} />}
+      </div>
+
+      {error && <p className={styles.error}>{error}</p>}
+
+      {result && (
+        <div className={styles.resultCard}>
+          <div className={styles.resultRow}>
+            <span className={styles.resultLabel}>Город / регион:</span>
+            <span className={styles.resultValue}>{result.place}{result.region !== result.place ? `, ${result.region}` : ""}</span>
+          </div>
+          <div className={styles.resultRow}>
+            <span className={styles.resultLabel}>Индекс:</span>
+            <span className={styles.resultValue}>{result.index}</span>
+          </div>
+          <div className={styles.resultRow}>
+            <span className={styles.resultLabel}>Стоимость доставки:</span>
+            <span className={`${styles.resultValue} ${styles.price}`}>{result.deliveryRub} ₽</span>
+          </div>
+          {formatDays() && (
+            <div className={styles.resultRow}>
+              <span className={styles.resultLabel}>Срок:</span>
+              <span className={styles.resultValue}>{formatDays()}</span>
+            </div>
+          )}
+          {diskCount > 1 && (
+            <p className={styles.diskHint}>Расчёт для {diskCount} дисков</p>
+          )}
+          {!confirmed ? (
+            <button type="button" className={styles.confirmBtn} onClick={handleConfirm}>
+              Подтвердить адрес
+            </button>
+          ) : (
+            <p className={styles.confirmedText}>✓ Адрес подтверждён</p>
+          )}
         </div>
       )}
+
+      <p className={styles.hint}>
+        Введите полный адрес — стоимость и сроки доставки рассчитаются автоматически.
+        Доставка Почтой России из Казани.
+      </p>
     </div>
   );
 }

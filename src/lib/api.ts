@@ -141,3 +141,36 @@ export async function apiAdminDeleteOrder(orderId: string, admin_password: strin
     token: null,
   });
 }
+
+// ---------- Pochta Russia ----------
+export interface CleanAddressResult {
+  index: string | null;
+  place: string | null;
+  region: string | null;
+  street: string | null;
+  house: string | null;
+  qualityCode: string | null;
+  validationCode: string | null;
+}
+
+export async function apiPochtaCleanAddress(address: string) {
+  return request<CleanAddressResult>('/api/pochta/clean-address', {
+    method: 'POST',
+    body: JSON.stringify({ address }),
+    token: null,
+  });
+}
+
+export interface PochtaTariffResult {
+  deliveryRub: number;
+  minDays: number | null;
+  maxDays: number | null;
+}
+
+export async function apiPochtaTariff(indexTo: string, diskCount: number = 1) {
+  return request<PochtaTariffResult>('/api/pochta/tariff', {
+    method: 'POST',
+    body: JSON.stringify({ indexTo, diskCount }),
+    token: null,
+  });
+}
