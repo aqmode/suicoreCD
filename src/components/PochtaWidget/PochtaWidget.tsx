@@ -182,13 +182,15 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     markersRef.current.forEach((m, code) => m.setIcon(code === o.postalCode ? officeIconActive : officeIcon));
     mapRef.current?.setView([o.latitude, o.longitude], Math.max(mapRef.current.getZoom(), 13));
     try {
-      const { data } = await apiPochtaTariff(o.postalCode, diskCount);
-      if (data?.deliveryRub) {
+      const { data, error } = await apiPochtaTariff(o.postalCode, diskCount);
+      if (!error && data?.deliveryRub != null && data.deliveryRub > 0) {
         setTariff({ rub: data.deliveryRub, minDays: data.minDays, maxDays: data.maxDays });
       } else {
+        console.warn('[PochtaWidget] tariff API fallback — error:', error, 'data:', data);
         setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
       }
-    } catch {
+    } catch (e) {
+      console.warn('[PochtaWidget] tariff API exception:', e);
       setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
     } finally {
       setLoadingTariff(false);

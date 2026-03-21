@@ -613,10 +613,15 @@ app.post('/api/pochta/tariff', async (req, res) => {
     });
     if (!resp.ok) {
       const text = await resp.text();
+      console.error('[pochta/tariff] API error %d: %s', resp.status, text.slice(0, 300));
       return res.status(resp.status).json({ error: text });
     }
     const data = await resp.json();
-    const totalRate = data['total-rate'] ?? 0; // копейки
+    console.log('[pochta/tariff] raw response:', JSON.stringify(data).slice(0, 400));
+    const totalRate = data['total-rate'] ?? data['total-rate-with-discount'] ?? 0; // копейки
+    if (!totalRate) {
+      console.warn('[pochta/tariff] total-rate is 0 or missing, data keys:', Object.keys(data));
+    }
     const deliveryRub = Math.ceil(totalRate / 100);
     const minDays = data['delivery-time']?.['min-days'] ?? null;
     const maxDays = data['delivery-time']?.['max-days'] ?? null;
