@@ -622,5 +622,48 @@ app.post('/api/pochta/tariff', async (req, res) => {
   }
 });
 
+// Ближайшие почтовые отделения по координатам
+app.get('/api/pochta/nearby', async (req, res) => {
+  try {
+    const lat = parseFloat(req.query.lat as string);
+    const lon = parseFloat(req.query.lon as string);
+    const top = Math.min(Math.max(parseInt(req.query.top as string) || 30, 1), 100);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return res.status(400).json({ error: 'Нужны параметры lat и lon' });
+    }
+    const url = `https://otpravka-api.pochta.ru/postoffice/1.0/nearby?latitude=${lat}&longitude=${lon}&top=${top}&filter=ALL`;
+    const resp = await fetch(url, {
+      headers: {
+        'Authorization': `AccessToken ${POCHTA_TOKEN}`,
+        'X-User-Authorization': `Basic ${POCHTA_USER_KEY}`,
+        'Accept': 'application/json;charset=UTF-8',
+      },
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      return res.status(resp.status).json({ error: text });
+    }
+    const data = await resp.json() as Array<Record<string, unknown>>;
+    // Возвращаем только нужные поля — экономим трафик
+    const offices = (Array.isArray(data) ? data : [])
+      .filter((o) => !o['is-closed'] && !o['is-temporary-closed'])
+      .map((o) => ({
+        postalCode: o['postal-code'] ?? '',
+        address: o['address-source'] ?? '',
+        latitude: o['latitude'] ?? 0,
+        longitude: o['longitude'] ?? 0,
+        settlement: o['settlement'] ?? '',
+        region: o['region'] ?? '',
+        distance: Math.round((o['distance'] as number) ?? 0),
+        typeCode: o['type-code'] ?? '',
+        worksSaturdays: o['works-on-saturdays'] ?? false,
+        worksSundays: o['works-on-sundays'] ?? false,
+      }));
+    res.json(offices);
+  } catch (e) {
+    res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
+  }
+});
+
 const PORT = Number(process.env.API_PORT) || 3001;
 app.listen(PORT, () => console.log(`[db-api] http://localhost:${PORT}`));

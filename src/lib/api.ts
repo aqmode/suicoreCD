@@ -174,3 +174,23 @@ export async function apiPochtaTariff(indexTo: string, diskCount: number = 1) {
     token: null,
   });
 }
+
+export interface PochtaOffice {
+  postalCode: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  settlement: string;
+  region: string;
+  distance: number;      // meters
+  typeCode: string;
+  worksSaturdays: boolean;
+  worksSundays: boolean;
+}
+
+export async function apiPochtaNearby(lat: number, lon: number, top: number = 30) {
+  return request<PochtaOffice[]>(
+    `/api/pochta/nearby?lat=${lat}&lon=${lon}&top=${top}`,
+    { token: null },
+  );
+}

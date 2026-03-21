@@ -37,48 +37,6 @@ async function fetchCdekPvz(apiToken: string): Promise<CdekPvzItem[]> {
     }));
 }
 
-declare global {
-  interface Window {
-    ymaps?: {
-      ready: (fn: () => void) => void;
-      Map: new (
-        parent: string | HTMLElement,
-        state: { center: [number, number]; zoom: number },
-        options?: object
-      ) => {
-        events: {
-          add: (type: string, handler: (e: { get: (key: string) => [number, number] }) => void) => void;
-        };
-        geoObjects: {
-          add: (obj: unknown) => void;
-          remove: (obj: unknown) => void;
-          removeAll: () => void;
-        };
-        destroy: () => void;
-      };
-      Placemark: new (
-        coords: [number, number],
-        properties?: object,
-        options?: object
-      ) => {
-        events: { add: (type: string, handler: () => void) => void };
-      };
-      geocode: (coords: [number, number]) => Promise<{
-        geoObjects: {
-          get: (i: number) => { getAddressLine: () => string };
-          getLength: () => number;
-        };
-      }>;
-      ObjectManager: new (options?: { clusterize?: boolean; geoObjectOpenBalloonOnClick?: boolean }) => {
-        add: (data: object) => unknown;
-        objects: {
-          events: { add: (type: string, handler: (e: { get: (key: string) => number }) => void) => void };
-        };
-      };
-    };
-  }
-}
-
 interface Props {
   onSelect?: (point: YandexMapPoint) => void;
 }
