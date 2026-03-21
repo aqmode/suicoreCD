@@ -602,10 +602,14 @@ app.post('/api/pochta/tariff', async (req, res) => {
     const disks = Math.max(1, Number(diskCount) || 1);
     const totalMass = mass || (100 + (disks - 1) * 80);
 
-    // Перебираем типы отправлений — берём первый с ненулевым total-rate
-    // ONLINE_PARCEL — розничная онлайн-посылка (работает для всех ОПС включая постаматы)
-    // POSTAL_PARCEL — корпоративная (не работает для постаматов/АПС)
-    const mailTypes = ['ONLINE_PARCEL', 'POSTAL_PARCEL'];
+    // Перебираем типы — берём первый с ненулевым total-rate
+    // Порядок: от самого доступного к более редкому
+    const mailTypes = [
+      'ONLINE_PARCEL',       // Посылка онлайн — основной, дешевле, работает везде
+      'ONLINE_COURIER',      // Курьер онлайн
+      'EMS_OPTIMAL',         // EMS оптимальный
+      'POSTAL_PARCEL',       // Корпоративная посылка (не работает в постаматах)
+    ];
     let successData: Record<string, unknown> | null = null;
 
     for (const mailType of mailTypes) {
@@ -627,16 +631,19 @@ app.post('/api/pochta/tariff', async (req, res) => {
       const errors = data['errors'] as Array<{ code: string; description: string }> | undefined;
       const totalRate = (data['total-rate'] as number) ?? 0;
       if (errors && errors.length > 0 && totalRate === 0) {
-        console.warn('[pochta/tariff] %s → TARIFF_ERROR: %s', mailType, errors[0]?.description?.slice(0, 200));
-        continue; // пробуем следующий тип
+        console.warn('[pochta/tariff] %s → TARIFF_ERROR: %s', mailType, errors[0]?.description?.slice(0, 150));
+        continue;
       }
       successData = data;
-      console.log('[pochta/tariff] %s → success, total-rate=%d коп', mailType, totalRate);
+      console.log('[pochta/tariff] %s → success, total-rate=%d коп (%d руб)', mailType, totalRate, Math.ceil(totalRate / 100));
       break;
     }
 
     if (!successData) {
-      return res.status(422).json({ error: 'Почта России не может рассчитать тариф для данного отделения' });
+      // Не смогли посчитать ни одним типом (напр. постомат/АПС)
+      // Возвращаем deliveryRub: 0 — клиент применит расчёт по расстоянию
+      console.warn('[pochta/tariff] %s — все типы вернули ошибку, клиент применит fallback', indexTo);
+      return res.json({ deliveryRub: 0, minDays: null, maxDays: null });
     }
 
     const totalRateKop = (successData['total-rate'] as number) ?? 0;

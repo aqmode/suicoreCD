@@ -101,6 +101,7 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const officesRef = useRef<PochtaOffice[]>([]);   // актуальный список для handleOfficeClick
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const handleOfficeClickRef = useRef<(o: PochtaOffice) => void>(() => {});
@@ -174,6 +175,9 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     );
   }, [offices, selectedOffice]);
 
+  /* Держим officesRef актуальным */
+  useEffect(() => { officesRef.current = offices; }, [offices]);
+
   const handleOfficeClick = useCallback(async (o: PochtaOffice) => {
     setSelectedOffice(o);
     setConfirmed(false);
@@ -184,13 +188,24 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     try {
       const { data, error } = await apiPochtaTariff(o.postalCode, diskCount);
       if (!error && data?.deliveryRub != null && data.deliveryRub > 0) {
+        // API вернул реальную стоимость
         setTariff({ rub: data.deliveryRub, minDays: data.minDays, maxDays: data.maxDays });
       } else {
-        console.warn('[PochtaWidget] tariff API fallback — error:', error, 'data:', data);
-        setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
+        // deliveryRub === 0 значит это постамат/АПС — ищем следующее обычное ОПС
+        const all = officesRef.current;
+        const nextRegular = all.find(
+          (x) => x.postalCode !== o.postalCode && !x.address.toLowerCase().includes('апс') && !x.address.toLowerCase().includes('постомат') && !x.address.toLowerCase().includes('почтомат'),
+        );
+        if (nextRegular) {
+          console.info('[PochtaWidget] %s — постамат, переключаемся на %s', o.postalCode, nextRegular.postalCode);
+          // Переключаемся — рекурсивный вызов
+          handleOfficeClickRef.current(nextRegular);
+        } else {
+          setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
+        }
       }
     } catch (e) {
-      console.warn('[PochtaWidget] tariff API exception:', e);
+      console.warn('[PochtaWidget] tariff exception:', e);
       setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
     } finally {
       setLoadingTariff(false);
@@ -223,7 +238,19 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
         mapRef.current?.setView([lat, lon], 12);
         return;
       }
-      setOffices(data);
+      // Фильтруем постаматы/АПС — они не поддерживают расчёт тарифа
+      const filtered = data.filter((o) => {
+        const addr = o.address.toLowerCase();
+        return !addr.includes('апс') && !addr.includes('постомат') && !addr.includes('почтомат');
+      });
+      if (filtered.length === 0) {
+        setFallbackMode(true);
+        setFallbackTariff(getDeliveryCostRub(entry.city, [lat, lon], diskCount));
+        setOffices([]);
+        mapRef.current?.setView([lat, lon], 12);
+        return;
+      }
+      setOffices(filtered);
     } catch {
       setFallbackMode(true);
       setFallbackTariff(getDeliveryCostRub(entry.city, [lat, lon], diskCount));
