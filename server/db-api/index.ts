@@ -647,8 +647,7 @@ app.post('/api/pochta/tariff', async (req, res) => {
     }
 
     const totalRateKop = (successData['total-rate'] as number) ?? 0;
-    // total-rate в копейках
-    const deliveryRub = Math.ceil(totalRateKop / 100);
+    const deliveryRub = Math.ceil(totalRateKop / 100) + 150;
     const deliveryTime = successData['delivery-time'] as Record<string, number> | undefined;
     const minDays = deliveryTime?.['min-days'] ?? null;
     const maxDays = deliveryTime?.['max-days'] ?? null;

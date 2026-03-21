@@ -212,7 +212,7 @@ export function getDeliveryCostRub(
   /* 4. Доплата за доп. диски */
   const extra = Math.max(0, diskCount - 1) * EXTRA_DISK_RUB;
 
-  const total = base + extra;
+  const total = base + extra + 150;
   const clamped = Math.min(MAX_DELIVERY_RUB, Math.max(MIN_DELIVERY_RUB, total));
   return roundTo(clamped, ROUND_TO);
 }
