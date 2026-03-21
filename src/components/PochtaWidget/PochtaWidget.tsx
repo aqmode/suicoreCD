@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { apiPochtaNearby, apiPochtaTariff, type PochtaOffice } from "../../lib/api";
@@ -65,6 +66,15 @@ async function searchNominatim(query: string): Promise<NominatimResult[]> {
   return Array.isArray(d) ? d : [];
 }
 
+/* Типы отделений, которые не поддерживают расчёт тарифа посылки */
+const PARCEL_UNSUPPORTED_TYPES = new Set(['АПС', 'ПОЧТОМАТ', 'POSTMAT', 'LOCKER']);
+
+function isParcelUnsupported(o: { typeCode: string; address: string }): boolean {
+  if (PARCEL_UNSUPPORTED_TYPES.has(o.typeCode.toUpperCase())) return true;
+  const addr = o.address.toLowerCase();
+  return addr.includes('апс') || addr.includes('почтомат') || addr.includes('постамат') || addr.includes('постомат');
+}
+
 function distanceLabel(m: number): string {
   return m < 1000 ? `${m} м` : `${(m / 1000).toFixed(1)} км`;
 }
@@ -101,10 +111,19 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
-  const officesRef = useRef<PochtaOffice[]>([]);   // актуальный список для handleOfficeClick
+  const officesRef = useRef<PochtaOffice[]>([]);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const handleOfficeClickRef = useRef<(o: PochtaOffice) => void>(() => {});
+
+  /* ── Toast ── */
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+  }, []);
 
   /* ── Address search (Nominatim) ── */
   const [addrQuery, setAddrQuery] = useState("");
@@ -188,18 +207,15 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     try {
       const { data, error } = await apiPochtaTariff(o.postalCode, diskCount);
       if (!error && data?.deliveryRub != null && data.deliveryRub > 0) {
-        // API вернул реальную стоимость
         setTariff({ rub: data.deliveryRub, minDays: data.minDays, maxDays: data.maxDays });
       } else {
-        // deliveryRub === 0 значит это постамат/АПС — ищем следующее обычное ОПС
-        const all = officesRef.current;
-        const nextRegular = all.find(
-          (x) => x.postalCode !== o.postalCode && !x.address.toLowerCase().includes('апс') && !x.address.toLowerCase().includes('постомат') && !x.address.toLowerCase().includes('почтомат'),
+        // Тариф не посчитался — ищем следующее обычное ОПС
+        const next = officesRef.current.find(
+          (x) => x.postalCode !== o.postalCode && !isParcelUnsupported(x),
         );
-        if (nextRegular) {
-          console.info('[PochtaWidget] %s — постамат, переключаемся на %s', o.postalCode, nextRegular.postalCode);
-          // Переключаемся — рекурсивный вызов
-          handleOfficeClickRef.current(nextRegular);
+        if (next) {
+          showToast(`Это отделение не поддерживает доставку посылок. Переключаемся на ${next.postalCode}.`);
+          handleOfficeClickRef.current(next);
         } else {
           setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
         }
@@ -210,7 +226,7 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     } finally {
       setLoadingTariff(false);
     }
-  }, [diskCount]);
+  }, [diskCount, showToast]);
 
   handleOfficeClickRef.current = handleOfficeClick;
 
@@ -238,11 +254,8 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
         mapRef.current?.setView([lat, lon], 12);
         return;
       }
-      // Фильтруем постаматы/АПС — они не поддерживают расчёт тарифа
-      const filtered = data.filter((o) => {
-        const addr = o.address.toLowerCase();
-        return !addr.includes('апс') && !addr.includes('постомат') && !addr.includes('почтомат');
-      });
+      // Фильтруем постаматы/АПС — они не поддерживают расчёт тарифа посылки
+      const filtered = data.filter((o) => !isParcelUnsupported(o));
       if (filtered.length === 0) {
         setFallbackMode(true);
         setFallbackTariff(getDeliveryCostRub(entry.city, [lat, lon], diskCount));
@@ -482,6 +495,20 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
           ? "Стоимость рассчитана по расстоянию от Казани. Отделение уточним после оплаты."
           : "Выберите город — на карте появятся ближайшие почтовые отделения. Нажмите на отделение для расчёта стоимости."}
       </p>
+
+      {/* Toast — портал в body, позиция через CSS */}
+      {toast && typeof document !== "undefined" && createPortal(
+        <div className={styles.toast} role="status" aria-live="polite">
+          {toast}
+          <button
+            type="button"
+            className={styles.toastClose}
+            onClick={() => setToast(null)}
+            aria-label="Закрыть"
+          >×</button>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

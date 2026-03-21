@@ -355,3 +355,54 @@
   color: var(--text-muted);
   line-height: 1.4;
 }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 340px;
+  padding: 14px 16px;
+  background: #000;
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  animation: toastIn 0.22s ease;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.toastClose {
+  flex-shrink: 0;
+  margin-top: -2px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toastClose:hover {
+  color: #fff;
+}
+
+/* На мобильных — полная ширина сверху */
+@media (max-width: 600px) {
+  .toast {
+    top: 0;
+    right: 0;
+    left: 0;
+    max-width: 100%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  }
+}
