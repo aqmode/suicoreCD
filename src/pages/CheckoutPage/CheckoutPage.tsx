@@ -221,13 +221,15 @@ export default function CheckoutPage() {
             </div>
             <div className={styles.totalsRow}>
               <span className={styles.totalsLabel}>
-                Доставка{diskCount > 1 ? ` (${diskCount} диск.)` : ""}{deliveryRub === 0 ? " — тестовый заказ" : ""}
+                Доставка{diskCount > 1 ? ` (${diskCount} диск.)` : ""}
               </span>
-              <span className={styles.totalsValue}>{formatRub(deliveryRub)}</span>
+              <span className={styles.totalsValue}>
+                {pochtaPoint ? formatRub(deliveryRub) : "—"}
+              </span>
             </div>
             <div className={styles.totalsRowTotal}>
               <span className={styles.totalsLabel}>Итого</span>
-              <span className={styles.totalsValue}>{formatRub(totalWithDelivery)}</span>
+              <span className={styles.totalsValue}>{pochtaPoint ? formatRub(totalWithDelivery) : formatRub(totalRub)}</span>
             </div>
           </div>
 
