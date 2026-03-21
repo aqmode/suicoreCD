@@ -27,27 +27,43 @@ interface Props {
 }
 
 /* ── CARTO tile (same as DeliveryMap) ── */
-const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png";
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png";
 const TILE_OPTIONS: L.TileLayerOptions = {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
   subdomains: "abcd",
   maxZoom: 19,
+  detectRetina: true,
 };
 
 /* ── Markers ── */
 const officeIcon = L.divIcon({
   className: "pochta-marker",
   html: "<span></span>",
-  iconSize: [10, 10],
-  iconAnchor: [5, 5],
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
 });
 
 const officeIconActive = L.divIcon({
   className: "pochta-marker pochta-marker--active",
   html: "<span></span>",
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
 });
+
+/* ── Nominatim address search ── */
+const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
+interface NominatimResult { lat: string; lon: string; display_name: string; }
+
+async function searchNominatim(query: string): Promise<NominatimResult[]> {
+  if (!query.trim()) return [];
+  const params = new URLSearchParams({ q: query.trim(), format: "json", limit: "6", addressdetails: "0", countrycodes: "ru" });
+  const res = await fetch(`${NOMINATIM_URL}?${params}`, {
+    headers: { "Accept-Language": "ru", "User-Agent": "CDsuicoreMap/1.0" },
+  });
+  if (!res.ok) return [];
+  const d = await res.json();
+  return Array.isArray(d) ? d : [];
+}
 
 function distanceLabel(m: number): string {
   return m < 1000 ? `${m} м` : `${(m / 1000).toFixed(1)} км`;
@@ -89,6 +105,38 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
   onSelectRef.current = onSelect;
   const handleOfficeClickRef = useRef<(o: PochtaOffice) => void>(() => {});
 
+  /* ── Address search (Nominatim) ── */
+  const [addrQuery, setAddrQuery] = useState("");
+  const [addrResults, setAddrResults] = useState<NominatimResult[]>([]);
+  const [showAddrDropdown, setShowAddrDropdown] = useState(false);
+  const [addrLoading, setAddrLoading] = useState(false);
+  const addrTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleAddrInput = (val: string) => {
+    setAddrQuery(val);
+    setShowAddrDropdown(true);
+    if (addrTimerRef.current) clearTimeout(addrTimerRef.current);
+    if (val.trim().length < 3) { setAddrResults([]); return; }
+    addrTimerRef.current = setTimeout(async () => {
+      setAddrLoading(true);
+      try {
+        const results = await searchNominatim(val);
+        setAddrResults(results);
+      } finally {
+        setAddrLoading(false);
+      }
+    }, 350);
+  };
+
+  const pickAddrResult = (r: NominatimResult) => {
+    const lat = parseFloat(r.lat);
+    const lon = parseFloat(r.lon);
+    setAddrQuery(r.display_name.split(",").slice(0, 2).join(", "));
+    setAddrResults([]);
+    setShowAddrDropdown(false);
+    mapRef.current?.setView([lat, lon], 15);
+  };
+
   /* Init Leaflet map once */
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -96,7 +144,12 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     L.tileLayer(TILE_URL, TILE_OPTIONS).addTo(map);
     L.control.zoom({ position: "topright" }).addTo(map);
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; markersRef.current.clear(); };
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markersRef.current.clear();
+      if (addrTimerRef.current) clearTimeout(addrTimerRef.current);
+    };
   }, []);
 
   /* Redraw markers when offices or selection changes */
@@ -265,8 +318,44 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
         )}
       </div>
 
-      {/* Map — always rendered so Leaflet can attach; hidden until city selected */}
-      <div className={styles.mapSection} style={{ display: selectedCity && !fallbackMode ? "block" : "none" }}>
+      {/* Map — always in DOM so Leaflet tiles preload; hidden until city selected */}
+      <div
+        className={styles.mapSection}
+        style={selectedCity && !fallbackMode
+          ? undefined
+          : { visibility: "hidden", height: 0, overflow: "hidden", margin: 0 }}
+        ref={(el) => {
+          // invalidateSize when becoming visible so tiles fill correctly
+          if (el && selectedCity && !fallbackMode) {
+            requestAnimationFrame(() => mapRef.current?.invalidateSize());
+          }
+        }}
+      >
+        {/* Address search inside map section */}
+        {selectedCity && !fallbackMode && (
+          <div className={styles.addrGroup}>
+            <input
+              type="text"
+              className={styles.addrInput}
+              placeholder="Поиск адреса на карте…"
+              value={addrQuery}
+              onChange={(e) => handleAddrInput(e.target.value)}
+              onFocus={() => { if (addrResults.length > 0) setShowAddrDropdown(true); }}
+              onBlur={() => setTimeout(() => setShowAddrDropdown(false), 150)}
+              autoComplete="off"
+            />
+            {addrLoading && <span className={styles.spinnerSm} />}
+            {showAddrDropdown && addrResults.length > 0 && (
+              <ul className={styles.addrDropdown}>
+                {addrResults.map((r, i) => (
+                  <li key={i} className={styles.addrItem} onMouseDown={() => pickAddrResult(r)}>
+                    {r.display_name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         <div ref={containerRef} className={styles.mapContainer} />
       </div>
 
