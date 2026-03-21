@@ -600,37 +600,53 @@ app.post('/api/pochta/tariff', async (req, res) => {
       return res.status(503).json({ error: 'Pochta API not configured' });
     }
     const disks = Math.max(1, Number(diskCount) || 1);
-    // 1 CD ≈ 100г в коробке, каждый доп. диск +80г
     const totalMass = mass || (100 + (disks - 1) * 80);
-    const resp = await pochtaFetch('/tariff', 'POST', {
-      'index-from': POCHTA_INDEX_FROM,
-      'index-to': indexTo,
-      'mail-category': 'ORDINARY',
-      'mail-type': 'POSTAL_PARCEL',
-      'mass': totalMass,
-      'dimension': { height: 14, length: 13 + (disks - 1) * 1, width: 13 },
-      'fragile': false,
-    });
-    if (!resp.ok) {
-      const text = await resp.text();
-      console.error('[pochta/tariff] API error %d: %s', resp.status, text.slice(0, 300));
-      return res.status(resp.status).json({ error: text });
+
+    // Перебираем типы отправлений — берём первый с ненулевым total-rate
+    // ONLINE_PARCEL — розничная онлайн-посылка (работает для всех ОПС включая постаматы)
+    // POSTAL_PARCEL — корпоративная (не работает для постаматов/АПС)
+    const mailTypes = ['ONLINE_PARCEL', 'POSTAL_PARCEL'];
+    let successData: Record<string, unknown> | null = null;
+
+    for (const mailType of mailTypes) {
+      const resp = await pochtaFetch('/tariff', 'POST', {
+        'index-from': POCHTA_INDEX_FROM,
+        'index-to': indexTo,
+        'mail-category': 'ORDINARY',
+        'mail-type': mailType,
+        'mass': totalMass,
+        'dimension': { height: 14, length: 13 + (disks - 1) * 1, width: 13 },
+        'fragile': false,
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        console.warn('[pochta/tariff] %s → HTTP %d: %s', mailType, resp.status, text.slice(0, 200));
+        continue;
+      }
+      const data = await resp.json() as Record<string, unknown>;
+      const errors = data['errors'] as Array<{ code: string; description: string }> | undefined;
+      const totalRate = (data['total-rate'] as number) ?? 0;
+      if (errors && errors.length > 0 && totalRate === 0) {
+        console.warn('[pochta/tariff] %s → TARIFF_ERROR: %s', mailType, errors[0]?.description?.slice(0, 200));
+        continue; // пробуем следующий тип
+      }
+      successData = data;
+      console.log('[pochta/tariff] %s → success, total-rate=%d коп', mailType, totalRate);
+      break;
     }
-    const data = await resp.json();
-    console.log('[pochta/tariff] raw response:', JSON.stringify(data).slice(0, 400));
-    const totalRate = data['total-rate'] ?? data['total-rate-with-discount'] ?? 0; // копейки
-    if (!totalRate) {
-      console.warn('[pochta/tariff] total-rate is 0 or missing, data keys:', Object.keys(data));
+
+    if (!successData) {
+      return res.status(422).json({ error: 'Почта России не может рассчитать тариф для данного отделения' });
     }
-    const deliveryRub = Math.ceil(totalRate / 100);
-    const minDays = data['delivery-time']?.['min-days'] ?? null;
-    const maxDays = data['delivery-time']?.['max-days'] ?? null;
-    res.json({
-      deliveryRub,
-      minDays,
-      maxDays,
-      raw: data,
-    });
+
+    const totalRateKop = (successData['total-rate'] as number) ?? 0;
+    // total-rate в копейках
+    const deliveryRub = Math.ceil(totalRateKop / 100);
+    const deliveryTime = successData['delivery-time'] as Record<string, number> | undefined;
+    const minDays = deliveryTime?.['min-days'] ?? null;
+    const maxDays = deliveryTime?.['max-days'] ?? null;
+
+    res.json({ deliveryRub, minDays, maxDays });
   } catch (e) {
     res.status(500).json({ error: e instanceof Error ? e.message : 'Server error' });
   }
