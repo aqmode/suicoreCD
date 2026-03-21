@@ -533,10 +533,15 @@ app.post('/api/admin/orders/:id/delete', async (req, res) => {
 });
 
 // ---------- Pochta Russia API (tariff + address normalization) ----------
-const POCHTA_TOKEN = process.env.POCHTA_API_TOKEN || '';
-const POCHTA_USER_KEY = process.env.POCHTA_USER_KEY || '';
+const POCHTA_TOKEN = process.env.POCHTA_API_TOKEN || process.env.POCHTA_API_KEY || '';
+const POCHTA_USER_KEY = (process.env.POCHTA_USER_KEY || '').replace(/^"|"$/g, '');
 const POCHTA_BASE = 'https://otpravka-api.pochta.ru/1.0';
 const POCHTA_INDEX_FROM = process.env.POCHTA_INDEX_FROM || '420000'; // Казань
+
+if (!POCHTA_TOKEN) console.warn('[Pochta] ⚠ POCHTA_API_TOKEN / POCHTA_API_KEY not set — Pochta API will fail');
+else console.log('[Pochta] Token loaded (%d chars)', POCHTA_TOKEN.length);
+if (!POCHTA_USER_KEY) console.warn('[Pochta] ⚠ POCHTA_USER_KEY not set');
+else console.log('[Pochta] UserKey loaded (%d chars)', POCHTA_USER_KEY.length);
 
 async function pochtaFetch(path: string, method: string, body?: unknown) {
   const headers: Record<string, string> = {
@@ -590,6 +595,10 @@ app.post('/api/pochta/tariff', async (req, res) => {
     if (!indexTo || typeof indexTo !== 'string') {
       return res.status(400).json({ error: 'Нужен индекс назначения (indexTo)' });
     }
+    if (!POCHTA_TOKEN || !POCHTA_USER_KEY) {
+      console.error('[pochta/tariff] POCHTA_API_TOKEN or POCHTA_USER_KEY not set');
+      return res.status(503).json({ error: 'Pochta API not configured' });
+    }
     const disks = Math.max(1, Number(diskCount) || 1);
     // 1 CD ≈ 100г в коробке, каждый доп. диск +80г
     const totalMass = mass || (100 + (disks - 1) * 80);
@@ -631,6 +640,10 @@ app.get('/api/pochta/nearby', async (req, res) => {
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
       return res.status(400).json({ error: 'Нужны параметры lat и lon' });
     }
+    if (!POCHTA_TOKEN || !POCHTA_USER_KEY) {
+      console.error('[pochta/nearby] POCHTA_API_TOKEN or POCHTA_USER_KEY not set');
+      return res.status(503).json({ error: 'Pochta API not configured' });
+    }
     const url = `https://otpravka-api.pochta.ru/postoffice/1.0/nearby?latitude=${lat}&longitude=${lon}&top=${top}&filter=ALL`;
     const resp = await fetch(url, {
       headers: {
@@ -641,6 +654,7 @@ app.get('/api/pochta/nearby', async (req, res) => {
     });
     if (!resp.ok) {
       const text = await resp.text();
+      console.error(`[pochta/nearby] API error ${resp.status}: ${text}`);
       return res.status(resp.status).json({ error: text });
     }
     const data = await resp.json() as Array<Record<string, unknown>>;

@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { apiPochtaNearby, apiPochtaTariff, type PochtaOffice } from "../../lib/api";
 import { getDeliveryCostRub } from "../../lib/delivery";
 import styles from "./PochtaWidget.module.css";
@@ -24,32 +26,28 @@ interface Props {
   diskCount?: number;
 }
 
-const SCRIPT_ID = "yandex-maps-api-pochta";
-const MAP_ID = "pochta-map-root";
+/* ── CARTO tile (same as DeliveryMap) ── */
+const TILE_URL = "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png";
+const TILE_OPTIONS: L.TileLayerOptions = {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: "abcd",
+  maxZoom: 19,
+};
 
-/* ── Helpers ── */
-function loadYmaps(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.ymaps) { window.ymaps.ready(() => resolve()); return; }
-    if (document.getElementById(SCRIPT_ID)) {
-      const wait = () => {
-        if (window.ymaps) window.ymaps.ready(() => resolve());
-        else setTimeout(wait, 100);
-      };
-      wait();
-      return;
-    }
-    const key = import.meta.env.VITE_YANDEX_MAPS_API_KEY;
-    if (!key) { reject(new Error("No VITE_YANDEX_MAPS_API_KEY")); return; }
-    const s = document.createElement("script");
-    s.id = SCRIPT_ID;
-    s.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(key)}&lang=ru_RU`;
-    s.async = true;
-    s.onload = () => window.ymaps!.ready(() => resolve());
-    s.onerror = () => reject(new Error("ymaps script failed"));
-    document.head.appendChild(s);
-  });
-}
+/* ── Markers ── */
+const officeIcon = L.divIcon({
+  className: "pochta-marker",
+  html: "<span></span>",
+  iconSize: [10, 10],
+  iconAnchor: [5, 5],
+});
+
+const officeIconActive = L.divIcon({
+  className: "pochta-marker pochta-marker--active",
+  html: "<span></span>",
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
 
 function distanceLabel(m: number): string {
   return m < 1000 ? `${m} м` : `${(m / 1000).toFixed(1)} км`;
@@ -59,13 +57,11 @@ function distanceLabel(m: number): string {
    Component
    ══════════════════════════════════════════════════════════ */
 export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
-  /* ── Cities list ── */
   const [cities, setCities] = useState<CityEntry[]>([]);
   useEffect(() => {
     fetch("/cities.json").then((r) => r.json()).then((d) => setCities(d)).catch(() => {});
   }, []);
 
-  /* ── City search / autocomplete ── */
   const [cityQuery, setCityQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCity, setSelectedCity] = useState<CityEntry | null>(null);
@@ -76,47 +72,76 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     return cities.filter((c) => c.city.toLowerCase().includes(q)).slice(0, 8);
   }, [cityQuery, cities]);
 
-  /* ── Offices ── */
   const [offices, setOffices] = useState<PochtaOffice[]>([]);
   const [loadingOffices, setLoadingOffices] = useState(false);
-  const [officesError, setOfficesError] = useState<string | null>(null);
-
-  /* ── Selected office + tariff ── */
+  const [fallbackMode, setFallbackMode] = useState(false);
+  const [fallbackTariff, setFallbackTariff] = useState<number | null>(null);
+  const [fallbackConfirmed, setFallbackConfirmed] = useState(false);
   const [selectedOffice, setSelectedOffice] = useState<PochtaOffice | null>(null);
   const [tariff, setTariff] = useState<{ rub: number; minDays: number | null; maxDays: number | null } | null>(null);
   const [loadingTariff, setLoadingTariff] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  /* ── Map ── */
-  const mapRef = useRef<InstanceType<NonNullable<typeof window.ymaps>["Map"]> | null>(null);
-  const mapReady = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const handleOfficeClickRef = useRef<(o: PochtaOffice) => void>(() => {});
 
-  /* ── Click an office (defined before pickCity so it can be referenced) ── */
+  /* Init Leaflet map once */
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = L.map(containerRef.current, { center: [55.75, 37.62], zoom: 11, maxZoom: 19, zoomControl: false });
+    L.tileLayer(TILE_URL, TILE_OPTIONS).addTo(map);
+    L.control.zoom({ position: "topright" }).addTo(map);
+    mapRef.current = map;
+    return () => { map.remove(); mapRef.current = null; markersRef.current.clear(); };
+  }, []);
+
+  /* Redraw markers when offices or selection changes */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    markersRef.current.forEach((m) => map.removeLayer(m));
+    markersRef.current.clear();
+    if (offices.length === 0) return;
+    offices.forEach((o) => {
+      const isActive = selectedOffice?.postalCode === o.postalCode;
+      const marker = L.marker([o.latitude, o.longitude], { icon: isActive ? officeIconActive : officeIcon }).addTo(map);
+      marker.bindTooltip(`${o.postalCode} — ${o.address}`, { direction: "top" });
+      marker.on("click", () => handleOfficeClickRef.current(o));
+      markersRef.current.set(o.postalCode, marker);
+    });
+    const lats = offices.map((o) => o.latitude);
+    const lons = offices.map((o) => o.longitude);
+    map.fitBounds(
+      [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]],
+      { padding: [32, 32], maxZoom: 14 },
+    );
+  }, [offices, selectedOffice]);
+
   const handleOfficeClick = useCallback(async (o: PochtaOffice) => {
     setSelectedOffice(o);
     setConfirmed(false);
     setTariff(null);
     setLoadingTariff(true);
+    markersRef.current.forEach((m, code) => m.setIcon(code === o.postalCode ? officeIconActive : officeIcon));
+    mapRef.current?.setView([o.latitude, o.longitude], Math.max(mapRef.current.getZoom(), 13));
     try {
       const { data } = await apiPochtaTariff(o.postalCode, diskCount);
       if (data?.deliveryRub) {
         setTariff({ rub: data.deliveryRub, minDays: data.minDays, maxDays: data.maxDays });
       } else {
-        const fallback = getDeliveryCostRub(o.settlement, null, diskCount);
-        setTariff({ rub: fallback, minDays: null, maxDays: null });
+        setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
       }
     } catch {
-      const fallback = getDeliveryCostRub(o.settlement, null, diskCount);
-      setTariff({ rub: fallback, minDays: null, maxDays: null });
+      setTariff({ rub: getDeliveryCostRub(o.settlement, null, diskCount), minDays: null, maxDays: null });
     } finally {
       setLoadingTariff(false);
     }
   }, [diskCount]);
 
-  /* ── Pick a city ── */
-  const handleOfficeClickRef = useRef(handleOfficeClick);
   handleOfficeClickRef.current = handleOfficeClick;
 
   const pickCity = useCallback(async (entry: CityEntry) => {
@@ -126,7 +151,9 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     setSelectedOffice(null);
     setTariff(null);
     setConfirmed(false);
-    setOfficesError(null);
+    setFallbackMode(false);
+    setFallbackTariff(null);
+    setFallbackConfirmed(false);
 
     const [lat, lon] = entry.coordinates.split(",").map((s) => parseFloat(s.trim()));
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
@@ -135,59 +162,33 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     try {
       const { data, error } = await apiPochtaNearby(lat, lon, 40);
       if (error || !data || data.length === 0) {
-        setOfficesError("Не найдено отделений рядом с этим городом");
+        setFallbackMode(true);
+        setFallbackTariff(getDeliveryCostRub(entry.city, [lat, lon], diskCount));
         setOffices([]);
+        mapRef.current?.setView([lat, lon], 12);
         return;
       }
       setOffices(data);
-
-      // Init / update map
-      try {
-        await loadYmaps();
-        if (!mapReady.current) {
-          const map = new window.ymaps!.Map(MAP_ID, { center: [lat, lon], zoom: 12 });
-          mapRef.current = map;
-          mapReady.current = true;
-        } else {
-          mapRef.current!.geoObjects.removeAll();
-          mapRef.current!.setCenter([lat, lon], 12);
-        }
-        data.forEach((o) => {
-          const pm = new window.ymaps!.Placemark(
-            [o.latitude, o.longitude],
-            {
-              hintContent: `${o.postalCode} — ${o.address}`,
-              balloonContent: `<b>${o.postalCode}</b><br/>${o.address}<br/>${distanceLabel(o.distance)}`,
-            },
-            { preset: "islands#redCircleIcon" },
-          );
-          pm.events.add("click", () => handleOfficeClickRef.current(o));
-          mapRef.current!.geoObjects.add(pm);
-        });
-        if (data.length > 1) {
-          const lats = data.map((o) => o.latitude);
-          const lons = data.map((o) => o.longitude);
-          mapRef.current!.setBounds(
-            [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]],
-            { checkZoomRange: true },
-          );
-        }
-      } catch {
-        // map init not critical
-      }
     } catch {
-      setOfficesError("Ошибка загрузки отделений");
+      setFallbackMode(true);
+      setFallbackTariff(getDeliveryCostRub(entry.city, [lat, lon], diskCount));
+      setOffices([]);
+      mapRef.current?.setView([lat, lon], 12);
     } finally {
       setLoadingOffices(false);
     }
-  }, []);
+  }, [diskCount]);
 
-  /* ── Re-calc tariff when diskCount changes ── */
+  /* Re-calc when diskCount changes */
   useEffect(() => {
     if (selectedOffice) handleOfficeClick(selectedOffice);
+    else if (fallbackMode && selectedCity) {
+      const [lat, lon] = selectedCity.coordinates.split(",").map((s) => parseFloat(s.trim()));
+      const coords: [number, number] | null = Number.isFinite(lat) && Number.isFinite(lon) ? [lat, lon] : null;
+      setFallbackTariff(getDeliveryCostRub(selectedCity.city, coords, diskCount));
+    }
   }, [diskCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── Confirm ── */
   const handleConfirm = () => {
     if (!selectedOffice || !tariff) return;
     setConfirmed(true);
@@ -205,12 +206,21 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
     });
   };
 
-  /* ── Cleanup map on unmount ── */
-  useEffect(() => {
-    return () => {
-      if (mapRef.current) { mapRef.current.destroy(); mapRef.current = null; mapReady.current = false; }
-    };
-  }, []);
+  const handleFallbackConfirm = () => {
+    if (!selectedCity || fallbackTariff == null) return;
+    setFallbackConfirmed(true);
+    const [lat, lon] = selectedCity.coordinates.split(",").map((s) => parseFloat(s.trim()));
+    const coords: [number, number] | null = Number.isFinite(lat) && Number.isFinite(lon) ? [lat, lon] : null;
+    onSelectRef.current({
+      pvz_code: selectedCity.city,
+      address: selectedCity.city,
+      pvz_name: `Почта России — ${selectedCity.city}`,
+      delivery_rub: fallbackTariff,
+      city: selectedCity.city,
+      coords,
+      deliveryDays: "5–14 дн.",
+    });
+  };
 
   const daysLabel = tariff
     ? tariff.minDays != null && tariff.maxDays != null
@@ -220,7 +230,6 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
 
   return (
     <div className={styles.wrapper}>
-      {/* City input */}
       <div className={styles.inputGroup}>
         <input
           type="text"
@@ -235,6 +244,9 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
             setSelectedOffice(null);
             setTariff(null);
             setConfirmed(false);
+            setFallbackMode(false);
+            setFallbackTariff(null);
+            setFallbackConfirmed(false);
           }}
           onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
@@ -253,12 +265,35 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
         )}
       </div>
 
-      {officesError && <p className={styles.error}>{officesError}</p>}
+      {/* Map — always rendered so Leaflet can attach; hidden until city selected */}
+      <div className={styles.mapSection} style={{ display: selectedCity && !fallbackMode ? "block" : "none" }}>
+        <div ref={containerRef} className={styles.mapContainer} />
+      </div>
 
-      {/* Map */}
-      {selectedCity && (
-        <div className={styles.mapSection}>
-          <div id={MAP_ID} className={styles.mapContainer} />
+      {/* Fallback card */}
+      {fallbackMode && selectedCity && fallbackTariff != null && (
+        <div className={styles.resultCard}>
+          <div className={styles.resultRow}>
+            <span className={styles.resultLabel}>Город:</span>
+            <span className={styles.resultValue}>{selectedCity.city}</span>
+          </div>
+          <div className={styles.resultRow}>
+            <span className={styles.resultLabel}>Стоимость доставки:</span>
+            <span className={`${styles.resultValue} ${styles.price}`}>{fallbackTariff} ₽</span>
+          </div>
+          <div className={styles.resultRow}>
+            <span className={styles.resultLabel}>Ориент. срок:</span>
+            <span className={styles.resultValue}>5–14 дн.</span>
+          </div>
+          {diskCount > 1 && <p className={styles.diskHint}>Расчёт для {diskCount} дисков</p>}
+          <p className={styles.diskHint}>Точный адрес отделения уточним после оплаты.</p>
+          {!fallbackConfirmed ? (
+            <button type="button" className={styles.confirmBtn} onClick={handleFallbackConfirm}>
+              Подтвердить город доставки
+            </button>
+          ) : (
+            <p className={styles.confirmedText}>✓ Город подтверждён</p>
+          )}
         </div>
       )}
 
@@ -325,8 +360,9 @@ export default function PochtaWidget({ onSelect, diskCount = 1 }: Props) {
       )}
 
       <p className={styles.hint}>
-        Выберите город — на карте появятся ближайшие почтовые отделения.
-        Нажмите на отделение для расчёта стоимости и сроков доставки из Казани.
+        {fallbackMode
+          ? "Стоимость рассчитана по расстоянию от Казани. Отделение уточним после оплаты."
+          : "Выберите город — на карте появятся ближайшие почтовые отделения. Нажмите на отделение для расчёта стоимости."}
       </p>
     </div>
   );
